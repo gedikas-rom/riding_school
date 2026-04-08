@@ -1,0 +1,114 @@
+{
+  "name": "RS Lesson Slot",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "fields": [
+    {
+      "fieldname": "slot_date",
+      "fieldtype": "Date",
+      "label": "Datum",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "start_time",
+      "fieldtype": "Time",
+      "label": "Beginn",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "end_time",
+      "fieldtype": "Time",
+      "label": "Ende",
+      "reqd": 1
+    },
+    {
+      "fieldname": "instructor",
+      "fieldtype": "Link",
+      "label": "Reitlehrer",
+      "options": "RS Instructor",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "horse",
+      "fieldtype": "Link",
+      "label": "Pferd",
+      "options": "RS Horse",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "facility",
+      "fieldtype": "Link",
+      "label": "Reitplatz",
+      "options": "RS Facility"
+    },
+    {
+      "fieldname": "sb_details",
+      "fieldtype": "Section Break",
+      "label": "Details"
+    },
+    {
+      "fieldname": "slot_type",
+      "fieldtype": "Select",
+      "label": "Typ",
+      "options": "Individual\nGroup\nCourse\nEvent",
+      "default": "Individual",
+      "reqd": 1
+    },
+    {
+      "fieldname": "skill_level",
+      "fieldtype": "Select",
+      "label": "Skill Level",
+      "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition"
+    },
+    {
+      "fieldname": "max_riders",
+      "fieldtype": "Int",
+      "label": "Max. Reiter",
+      "default": "1"
+    },
+    {
+      "fieldname": "cb_details",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Open\nBooked\nCompleted\nCancelled",
+      "default": "Open",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sb_logbook",
+      "fieldtype": "Section Break",
+      "label": "Logbuch"
+    },
+    {
+      "fieldname": "logbook_entry",
+      "fieldtype": "Text Editor",
+      "label": "Kommentar Reitlehrer"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "Riding School Backoffice",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "Riding School Instructor",
+      "read": 1, "write": 1
+    },
+    {
+      "role": "Riding School Rider",
+      "read": 1
+    }
+  ],
+  "track_changes": 1
+}

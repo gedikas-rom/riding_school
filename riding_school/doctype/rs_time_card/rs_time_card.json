@@ -1,0 +1,91 @@
+{
+  "name": "RS Time Card",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "fields": [
+    {
+      "fieldname": "rider",
+      "fieldtype": "Link",
+      "label": "Reitschüler",
+      "options": "RS Rider",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Active\nExhausted\nExpired",
+      "default": "Active",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sb_lessons",
+      "fieldtype": "Section Break",
+      "label": "Stunden"
+    },
+    {
+      "fieldname": "total_lessons",
+      "fieldtype": "Int",
+      "label": "Stunden gesamt",
+      "default": "10",
+      "reqd": 1
+    },
+    {
+      "fieldname": "used_lessons",
+      "fieldtype": "Int",
+      "label": "Stunden verbraucht",
+      "default": "0",
+      "read_only": 1
+    },
+    {
+      "fieldname": "remaining_lessons",
+      "fieldtype": "Int",
+      "label": "Stunden verbleibend",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "cb_lessons",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "valid_from",
+      "fieldtype": "Date",
+      "label": "Gültig ab",
+      "reqd": 1
+    },
+    {
+      "fieldname": "valid_until",
+      "fieldtype": "Date",
+      "label": "Gültig bis"
+    },
+    {
+      "fieldname": "sb_billing",
+      "fieldtype": "Section Break",
+      "label": "Verknüpfung ERPNext"
+    },
+    {
+      "fieldname": "sales_order",
+      "fieldtype": "Link",
+      "label": "Sales Order",
+      "options": "Sales Order"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "Riding School Backoffice",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "Riding School Rider",
+      "read": 1
+    }
+  ],
+  "track_changes": 1
+}

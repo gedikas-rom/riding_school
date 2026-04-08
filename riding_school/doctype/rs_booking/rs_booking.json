@@ -1,0 +1,77 @@
+{
+  "name": "RS Booking",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "fields": [
+    {
+      "fieldname": "rider",
+      "fieldtype": "Link",
+      "label": "Reitschüler",
+      "options": "RS Rider",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "lesson_slot",
+      "fieldtype": "Link",
+      "label": "Zeitslot",
+      "options": "RS Lesson Slot",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Reserved\nConfirmed\nCancelled\nCompleted",
+      "default": "Reserved",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "sb_billing",
+      "fieldtype": "Section Break",
+      "label": "Abrechnung"
+    },
+    {
+      "fieldname": "billing_type",
+      "fieldtype": "Select",
+      "label": "Abrechnungsart",
+      "options": "Single\nTime Card",
+      "default": "Single"
+    },
+    {
+      "fieldname": "time_card",
+      "fieldtype": "Link",
+      "label": "Zeitkarte",
+      "options": "RS Time Card",
+      "depends_on": "eval:doc.billing_type=='Time Card'"
+    },
+    {
+      "fieldname": "invoice",
+      "fieldtype": "Link",
+      "label": "Rechnung",
+      "options": "Sales Invoice",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "Riding School Backoffice",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "Riding School Instructor",
+      "read": 1
+    },
+    {
+      "role": "Riding School Rider",
+      "read": 1, "write": 1, "create": 1
+    }
+  ],
+  "track_changes": 1
+}
