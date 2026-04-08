@@ -5,101 +5,25 @@
   "naming_rule": "By fieldname",
   "autoname": "field:full_name",
   "fields": [
-    {
-      "fieldname": "full_name",
-      "fieldtype": "Data",
-      "label": "Name",
-      "reqd": 1,
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "user",
-      "fieldtype": "Link",
-      "label": "Benutzer",
-      "options": "User"
-    },
-    {
-      "fieldname": "customer",
-      "fieldtype": "Link",
-      "label": "Kunde (ERPNext)",
-      "options": "Customer"
-    },
-    {
-      "fieldname": "sb_riding",
-      "fieldtype": "Section Break",
-      "label": "Reiten"
-    },
-    {
-      "fieldname": "skill_level",
-      "fieldtype": "Select",
-      "label": "Skill Level",
-      "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition",
-      "reqd": 1,
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "lesson_type",
-      "fieldtype": "Select",
-      "label": "Stunden-Typ",
-      "options": "Individual\nGroup",
-      "default": "Individual"
-    },
-    {
-      "fieldname": "goal",
-      "fieldtype": "Select",
-      "label": "Ziel",
-      "options": "\nLeisure\nCompetition\nTherapy"
-    },
-    {
-      "fieldname": "cb_riding",
-      "fieldtype": "Column Break"
-    },
-    {
-      "fieldname": "weight_kg",
-      "fieldtype": "Int",
-      "label": "Gewicht (kg)"
-    },
-    {
-      "fieldname": "max_hours_per_week",
-      "fieldtype": "Float",
-      "label": "Max. Stunden pro Woche",
-      "default": "2"
-    },
-    {
-      "fieldname": "sb_horses",
-      "fieldtype": "Section Break",
-      "label": "Pferde-Präferenzen"
-    },
-    {
-      "fieldname": "preferred_horses",
-      "fieldtype": "Table MultiSelect",
-      "label": "Bevorzugte Pferde",
-      "options": "RS Rider Preferred Horse"
-    },
-    {
-      "fieldname": "excluded_horses",
-      "fieldtype": "Table MultiSelect",
-      "label": "Ausgeschlossene Pferde",
-      "options": "RS Rider Excluded Horse"
-    }
+    {"fieldname": "full_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "user", "fieldtype": "Link", "label": "Benutzer", "options": "User"},
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Kunde (ERPNext)", "options": "Customer"},
+    {"fieldname": "sb_riding", "fieldtype": "Section Break", "label": "Reiten"},
+    {"fieldname": "skill_level", "fieldtype": "Select", "label": "Skill Level", "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "lesson_type", "fieldtype": "Select", "label": "Stunden-Typ", "options": "Individual\nGroup", "default": "Individual"},
+    {"fieldname": "goal", "fieldtype": "Select", "label": "Ziel", "options": "\nLeisure\nCompetition\nTherapy"},
+    {"fieldname": "cb_riding", "fieldtype": "Column Break"},
+    {"fieldname": "weight_kg", "fieldtype": "Int", "label": "Gewicht (kg)"},
+    {"fieldname": "max_hours_per_week", "fieldtype": "Float", "label": "Max. Stunden pro Woche", "default": "2"},
+    {"fieldname": "sb_horses", "fieldtype": "Section Break", "label": "Pferde-Präferenzen"},
+    {"fieldname": "preferred_horses", "fieldtype": "Small Text", "label": "Bevorzugte Pferde"},
+    {"fieldname": "excluded_horses", "fieldtype": "Small Text", "label": "Ausgeschlossene Pferde"}
   ],
   "permissions": [
-    {
-      "role": "System Manager",
-      "read": 1, "write": 1, "create": 1, "delete": 1
-    },
-    {
-      "role": "Riding School Backoffice",
-      "read": 1, "write": 1, "create": 1, "delete": 1
-    },
-    {
-      "role": "Riding School Instructor",
-      "read": 1
-    },
-    {
-      "role": "Riding School Rider",
-      "read": 1, "write": 1
-    }
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Backoffice", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Instructor", "read": 1},
+    {"role": "Riding School Rider", "read": 1, "write": 1}
   ],
   "track_changes": 1
 }
