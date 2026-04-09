@@ -20,10 +20,10 @@
       "reqd": 1
     },
     {
-      "fieldname": "qualification",
-      "fieldtype": "Select",
-      "label": "Qualifikation",
-      "options": "\nAnfängerunterricht\nDressur\nSpringen\nTherapie",
+      "fieldname": "qualifications",
+      "fieldtype": "MultiSelect",
+      "label": "Qualifikationen",
+      "options": "Anfängerunterricht\nDressur\nSpringen\nTherapie",
       "in_list_view": 1
     },
     {
@@ -41,22 +41,13 @@
       "fieldname": "preferred_block_size",
       "fieldtype": "Select",
       "label": "Bevorzugte Blockgröße",
-      "options": "1 Stunde\n2 Stunden\n3 Stunden"
+      "options": "1 Stunde\n2 Stunden\n3 Stunden\n4 Stunden\n5 Stunden"
     }
   ],
   "permissions": [
-    {
-      "role": "System Manager",
-      "read": 1, "write": 1, "create": 1, "delete": 1
-    },
-    {
-      "role": "Riding School Backoffice",
-      "read": 1, "write": 1, "create": 1, "delete": 1
-    },
-    {
-      "role": "Riding School Instructor",
-      "read": 1, "write": 1
-    }
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Backoffice", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Instructor", "read": 1, "write": 1}
   ],
   "track_changes": 1
 }

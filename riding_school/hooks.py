@@ -246,3 +246,6 @@ app_license = "mit"
 fixtures = [
     {"dt": "DocType", "filters": [["module", "=", "Riding School"]]}
 ]
+
+app_include_js = []
+app_include_css = []
