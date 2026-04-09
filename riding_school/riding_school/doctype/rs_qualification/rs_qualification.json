@@ -1,0 +1,13 @@
+{
+  "name": "RS Qualification",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "fields": [
+    {"fieldname": "qualification_name", "fieldtype": "Data", "label": "Bezeichnung", "reqd": 1, "in_list_view": 1}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Backoffice", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Instructor", "read": 1}
+  ]
+}
