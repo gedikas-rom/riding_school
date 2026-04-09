@@ -1,5 +1,5 @@
 import frappe
 from frappe.model.document import Document
 
-class RsHorse (Document):
+class RSHorse(Document):
     pass
