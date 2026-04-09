@@ -16,7 +16,7 @@ app_license = "mit"
 # 		"name": "riding_school",
 # 		"logo": "/assets/riding_school/logo.png",
 # 		"title": "Riding School",
-# 		"route": "/riding_school",
+# 		"route": "/app/riding_school",
 # 		"has_permission": "riding_school.api.permission.has_app_permission"
 # 	}
 # ]
@@ -249,3 +249,15 @@ fixtures = [
 
 app_include_js = []
 app_include_css = []
+
+add_to_apps_screen = [
+    {
+        "name": "riding_school",
+        "logo": "/assets/riding_school/images/logo.png",
+        "title": "Riding School",
+        "route": "/app/riding_school",
+        "has_permission": "riding_school.riding_school.config.riding_school.get_data"
+    }
+]
+
+modules_to_load = ["Riding School"]
