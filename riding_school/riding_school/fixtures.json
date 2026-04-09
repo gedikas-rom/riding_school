@@ -1,0 +1,8 @@
+[
+  {
+    "dt": "DocType",
+    "filters": [
+      ["module", "=", "Riding School"]
+    ]
+  }
+]
