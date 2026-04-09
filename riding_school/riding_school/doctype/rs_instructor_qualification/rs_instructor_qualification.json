@@ -6,9 +6,9 @@
   "fields": [
     {
       "fieldname": "qualification",
-      "fieldtype": "Link",
+      "fieldtype": "Select",
       "label": "Qualifikation",
-      "options": "RS Qualification",
+      "options": "Anfängerunterricht\nDressur\nSpringen\nTherapie",
       "reqd": 1,
       "in_list_view": 1
     }
