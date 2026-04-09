@@ -253,7 +253,7 @@ app_include_css = []
 add_to_apps_screen = [
     {
         "name": "riding_school",
-        "logo": "/assets/riding_school/images/logo.png",
+        "logo": "/assets/riding_school/images/horse.svg",
         "title": "Riding School",
         "route": "/app/riding_school",
         "has_permission": "riding_school.riding_school.config.riding_school.get_data"

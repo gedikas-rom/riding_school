@@ -1,0 +1,17 @@
+{
+  "name": "RS Instructor Qualification",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "qualification",
+      "fieldtype": "Select",
+      "label": "Qualifikation",
+      "options": "Anfängerunterricht\nDressur\nSpringen\nTherapie",
+      "reqd": 1,
+      "in_list_view": 1
+    }
+  ],
+  "permissions": []
+}

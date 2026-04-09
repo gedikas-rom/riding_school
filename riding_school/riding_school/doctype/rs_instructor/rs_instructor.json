@@ -5,44 +5,12 @@
   "naming_rule": "By fieldname",
   "autoname": "field:full_name",
   "fields": [
-    {
-      "fieldname": "full_name",
-      "fieldtype": "Data",
-      "label": "Name",
-      "reqd": 1,
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "user",
-      "fieldtype": "Link",
-      "label": "Benutzer",
-      "options": "User",
-      "reqd": 1
-    },
-    {
-      "fieldname": "qualifications",
-      "fieldtype": "MultiSelect",
-      "label": "Qualifikationen",
-      "options": "Anfängerunterricht\nDressur\nSpringen\nTherapie",
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "sb_availability",
-      "fieldtype": "Section Break",
-      "label": "Verfügbarkeit"
-    },
-    {
-      "fieldname": "max_hours_per_day",
-      "fieldtype": "Float",
-      "label": "Max. Stunden pro Tag",
-      "default": "6"
-    },
-    {
-      "fieldname": "preferred_block_size",
-      "fieldtype": "Select",
-      "label": "Bevorzugte Blockgröße",
-      "options": "1 Stunde\n2 Stunden\n3 Stunden\n4 Stunden\n5 Stunden"
-    }
+    {"fieldname": "full_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "user", "fieldtype": "Link", "label": "Benutzer", "options": "User", "reqd": 1},
+    {"fieldname": "qualifications", "fieldtype": "Table MultiSelect", "label": "Qualifikationen", "options": "RS Instructor Qualification", "in_list_view": 1},
+    {"fieldname": "sb_availability", "fieldtype": "Section Break", "label": "Verfügbarkeit"},
+    {"fieldname": "max_hours_per_day", "fieldtype": "Float", "label": "Max. Stunden pro Tag", "default": "6"},
+    {"fieldname": "preferred_block_size", "fieldtype": "Select", "label": "Bevorzugte Blockgröße", "options": "1 Stunde\n2 Stunden\n3 Stunden\n4 Stunden\n5 Stunden"}
   ],
   "permissions": [
     {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
