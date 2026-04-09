@@ -2,52 +2,17 @@
   "name": "RS Facility",
   "doctype": "DocType",
   "module": "Riding School",
-  "naming_rule": "By fieldname",
-  "autoname": "field:facility_name",
+  "autoname": "RS-FAC-.####",
   "fields": [
-    {
-      "fieldname": "facility_name",
-      "fieldtype": "Data",
-      "label": "Name",
-      "reqd": 1,
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "facility_type",
-      "fieldtype": "Select",
-      "label": "Typ",
-      "options": "\nHalle\nAußenplatz\nRoundpen",
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "capacity",
-      "fieldtype": "Int",
-      "label": "Kapazität (Pferde)",
-      "default": "1"
-    },
-    {
-      "fieldname": "discipline",
-      "fieldtype": "Select",
-      "label": "Disziplin",
-      "options": "\nDressur\nSpringen\nBodenarbeit\nAllgemein"
-    }
+    {"fieldname": "facility_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "facility_type", "fieldtype": "Select", "label": "Typ", "options": "\nHalle\nAußenplatz\nRoundpen", "in_list_view": 1},
+    {"fieldname": "capacity", "fieldtype": "Int", "label": "Kapazität (Pferde)", "default": "1"},
+    {"fieldname": "discipline", "fieldtype": "Select", "label": "Disziplin", "options": "\nDressur\nSpringen\nBodenarbeit\nAllgemein"}
   ],
   "permissions": [
-    {
-      "role": "System Manager",
-      "read": 1, "write": 1, "create": 1, "delete": 1
-    },
-    {
-      "role": "Riding School Backoffice",
-      "read": 1, "write": 1, "create": 1, "delete": 1
-    },
-    {
-      "role": "Riding School Instructor",
-      "read": 1
-    },
-    {
-      "role": "Riding School Rider",
-      "read": 1
-    }
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Backoffice", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Instructor", "read": 1},
+    {"role": "Riding School Rider", "read": 1}
   ]
 }

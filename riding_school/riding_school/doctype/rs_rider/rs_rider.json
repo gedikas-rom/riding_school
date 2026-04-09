@@ -2,8 +2,7 @@
   "name": "RS Rider",
   "doctype": "DocType",
   "module": "Riding School",
-  "naming_rule": "By fieldname",
-  "autoname": "field:full_name",
+  "autoname": "RS-RIDER-.####",
   "fields": [
     {"fieldname": "full_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
     {"fieldname": "user", "fieldtype": "Link", "label": "Benutzer", "options": "User"},
