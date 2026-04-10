@@ -7,10 +7,10 @@ app_license = "mit"
 
 add_to_apps_screen = [
     {
-        "name": "riding_school",
+        "name": "riding-school",
         "logo": "/assets/riding_school/images/horse.svg",
         "title": "Riding School",
-        "route": "/desk"
+        "route": "/desk/riding-school"
     }
 ]
 
