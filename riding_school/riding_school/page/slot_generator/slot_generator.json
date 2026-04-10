@@ -1,0 +1,12 @@
+{
+  "doctype": "Page",
+  "module": "Riding School",
+  "name": "slot-generator",
+  "page_name": "slot-generator",
+  "title": "Slot Generator",
+  "standard": "Yes",
+  "roles": [
+    {"role": "Riding School Backoffice"},
+    {"role": "System Manager"}
+  ]
+}

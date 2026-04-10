@@ -4,18 +4,80 @@
   "module": "Riding School",
   "issingle": 1,
   "fields": [
-    {"fieldname": "slot_duration", "fieldtype": "Select", "label": "Slot-Dauer (Minuten)", "options": "30\n45\n60\n90", "default": "60", "reqd": 1},
-    {"fieldname": "sb_days", "fieldtype": "Section Break", "label": "Verfügbare Wochentage"},
-    {"fieldname": "monday", "fieldtype": "Check", "label": "Montag", "default": "1"},
-    {"fieldname": "tuesday", "fieldtype": "Check", "label": "Dienstag", "default": "1"},
-    {"fieldname": "wednesday", "fieldtype": "Check", "label": "Mittwoch", "default": "1"},
-    {"fieldname": "thursday", "fieldtype": "Check", "label": "Donnerstag", "default": "1"},
-    {"fieldname": "friday", "fieldtype": "Check", "label": "Freitag", "default": "1"},
-    {"fieldname": "saturday", "fieldtype": "Check", "label": "Samstag", "default": "1"},
-    {"fieldname": "sunday", "fieldtype": "Check", "label": "Sonntag", "default": "0"}
+    {
+      "fieldname": "slot_duration",
+      "fieldtype": "Select",
+      "label": "Slot-Dauer (Minuten)",
+      "options": "30\n45\n60\n90",
+      "default": "60",
+      "reqd": 1
+    },
+    {
+      "fieldname": "break_duration",
+      "fieldtype": "Select",
+      "label": "Pause zwischen Slots (Minuten)",
+      "options": "0\n5\n10\n15\n30",
+      "default": "0",
+      "reqd": 1
+    },
+    {
+      "fieldname": "sb_days",
+      "fieldtype": "Section Break",
+      "label": "Verfügbare Wochentage"
+    },
+    {
+      "fieldname": "monday",
+      "fieldtype": "Check",
+      "label": "Montag",
+      "default": "1"
+    },
+    {
+      "fieldname": "tuesday",
+      "fieldtype": "Check",
+      "label": "Dienstag",
+      "default": "1"
+    },
+    {
+      "fieldname": "wednesday",
+      "fieldtype": "Check",
+      "label": "Mittwoch",
+      "default": "1"
+    },
+    {
+      "fieldname": "thursday",
+      "fieldtype": "Check",
+      "label": "Donnerstag",
+      "default": "1"
+    },
+    {
+      "fieldname": "friday",
+      "fieldtype": "Check",
+      "label": "Freitag",
+      "default": "1"
+    },
+    {
+      "fieldname": "saturday",
+      "fieldtype": "Check",
+      "label": "Samstag",
+      "default": "1"
+    },
+    {
+      "fieldname": "sunday",
+      "fieldtype": "Check",
+      "label": "Sonntag",
+      "default": "0"
+    }
   ],
   "permissions": [
-    {"role": "System Manager", "read": 1, "write": 1},
-    {"role": "Riding School Backoffice", "read": 1, "write": 1}
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Riding School Backoffice",
+      "read": 1,
+      "write": 1
+    }
   ]
 }

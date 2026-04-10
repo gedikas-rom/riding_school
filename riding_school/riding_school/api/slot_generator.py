@@ -35,11 +35,46 @@ def timedelta_to_time(td):
 
 
 @frappe.whitelist()
+def check_existing_slots(week_start_date):
+    """Prüft ob bereits offene Slots für diese Woche existieren"""
+    from datetime import datetime, timedelta
+    week_start = datetime.strptime(week_start_date, "%Y-%m-%d").date()
+    week_end = week_start + timedelta(days=6)
+    
+    count = frappe.db.count("RS Lesson Slot", {
+        "slot_date": ["between", [week_start, week_end]],
+        "status": "Open"
+    })
+    return {"existing_count": count}
+
+
+@frappe.whitelist()
+def delete_open_slots_for_week(week_start_date):
+    """Löscht alle offenen Slots für eine Woche"""
+    from datetime import datetime, timedelta
+    week_start = datetime.strptime(week_start_date, "%Y-%m-%d").date()
+    week_end = week_start + timedelta(days=6)
+    
+    slots = frappe.get_all("RS Lesson Slot", 
+        filters={
+            "slot_date": ["between", [week_start, week_end]],
+            "status": "Open"
+        },
+        pluck="name"
+    )
+    for slot in slots:
+        frappe.delete_doc("RS Lesson Slot", slot, ignore_permissions=True)
+    frappe.db.commit()
+    return {"deleted": len(slots)}
+
+
+@frappe.whitelist()
 def generate_slots_for_week(week_start_date):
     week_start = datetime.strptime(week_start_date, "%Y-%m-%d").date()
 
     config = frappe.get_single("RS Slot Config")
     slot_duration = int(config.slot_duration)
+    break_duration = int(config.break_duration or 0)
 
     active_weekdays = []
     for day_num, field in CONFIG_WEEKDAY_MAP.items():
@@ -102,7 +137,7 @@ def generate_slots_for_week(week_start_date):
                     slot.insert(ignore_permissions=True)
                     slots_created += 1
 
-                current = end
+                current = end + timedelta(minutes=break_duration)
 
     frappe.db.commit()
 
