@@ -3,12 +3,14 @@
   "doctype": "DocType",
   "module": "Riding School",
   "autoname": "RS-INST-.####",
+  "allow_rename": 1,
   "fields": [
     {"fieldname": "full_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
     {"fieldname": "user", "fieldtype": "Link", "label": "Benutzer", "options": "User", "reqd": 1},
     {"fieldname": "qualifications", "fieldtype": "Table", "label": "Qualifikationen", "options": "RS Instructor Qualification"},
-    {"fieldname": "qualification_summary", "fieldtype": "Small Text", "label": "Qualifikationen", "read_only": 1, "in_list_view": 1},
+    {"fieldname": "qualification_summary", "fieldtype": "Small Text", "label": "Qualifikationen (Übersicht)", "read_only": 1, "in_list_view": 1},
     {"fieldname": "sb_availability", "fieldtype": "Section Break", "label": "Verfügbarkeit"},
+    {"fieldname": "availability", "fieldtype": "Table", "label": "Verfügbare Zeiten", "options": "RS Instructor Availability"},
     {"fieldname": "max_hours_per_day", "fieldtype": "Float", "label": "Max. Stunden pro Tag", "default": "6"},
     {"fieldname": "preferred_block_size", "fieldtype": "Select", "label": "Bevorzugte Blockgröße", "options": "1 Stunde\n2 Stunden\n3 Stunden\n4 Stunden\n5 Stunden"}
   ],

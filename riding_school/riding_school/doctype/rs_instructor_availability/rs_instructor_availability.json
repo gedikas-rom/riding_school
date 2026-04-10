@@ -1,0 +1,31 @@
+{
+  "name": "RS Instructor Availability",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "weekday",
+      "fieldtype": "Select",
+      "label": "Wochentag",
+      "options": "Montag\nDienstag\nMittwoch\nDonnerstag\nFreitag\nSamstag",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "from_time",
+      "fieldtype": "Time",
+      "label": "Von",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "to_time",
+      "fieldtype": "Time",
+      "label": "Bis",
+      "reqd": 1,
+      "in_list_view": 1
+    }
+  ],
+  "permissions": []
+}
