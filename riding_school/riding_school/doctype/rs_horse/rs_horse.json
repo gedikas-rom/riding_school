@@ -4,26 +4,115 @@
   "module": "Riding School",
   "autoname": "RS-HORSE-.####",
   "fields": [
-    {"fieldname": "horse_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
-    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nSick\nVacation", "default": "Active", "in_list_view": 1, "reqd": 1},
-    {"fieldname": "sb_skills", "fieldtype": "Section Break", "label": "Fähigkeiten & Einschränkungen"},
-    {"fieldname": "skill_level_min", "fieldtype": "Select", "label": "Skill Level Minimum", "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition", "reqd": 1},
-    {"fieldname": "skill_level_max", "fieldtype": "Select", "label": "Skill Level Maximum", "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition", "reqd": 1},
-    {"fieldname": "cb_skills", "fieldtype": "Column Break"},
-    {"fieldname": "specialties", "fieldtype": "Select", "label": "Spezialität", "options": "\nDressur\nSpringen\nBodenarbeit\nAnfänger\nTherapie"},
-    {"fieldname": "health_notes", "fieldtype": "Text Editor", "label": "Gesundheitliche Einschränkungen"},
-    {"fieldname": "sb_capacity", "fieldtype": "Section Break", "label": "Kapazität & Zeiten"},
-    {"fieldname": "max_weight_kg", "fieldtype": "Int", "label": "Max. Gewicht (kg)", "reqd": 1},
-    {"fieldname": "max_hours_per_day", "fieldtype": "Float", "label": "Max. Stunden pro Tag", "default": "3"},
-    {"fieldname": "cb_capacity", "fieldtype": "Column Break"},
-    {"fieldname": "max_hours_per_week", "fieldtype": "Float", "label": "Max. Stunden pro Woche", "default": "15"},
-    {"fieldname": "rest_minutes", "fieldtype": "Int", "label": "Pause nach Einsatz (Minuten)", "default": "30"}
+    {
+      "fieldname": "horse_name",
+      "fieldtype": "Data",
+      "label": "Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Active\nSick\nVacation",
+      "default": "Active",
+      "in_list_view": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "sb_skills",
+      "fieldtype": "Section Break",
+      "label": "Fähigkeiten & Einschränkungen"
+    },
+    {
+      "fieldname": "skill_level_min",
+      "fieldtype": "Select",
+      "label": "Skill Level Minimum",
+      "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition",
+      "reqd": 1
+    },
+    {
+      "fieldname": "skill_level_max",
+      "fieldtype": "Select",
+      "label": "Skill Level Maximum",
+      "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition",
+      "reqd": 1
+    },
+    {
+      "fieldname": "cb_skills",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "specialties",
+      "fieldtype": "Select",
+      "label": "Spezialität",
+      "options": "\nDressur\nSpringen\nBodenarbeit\nAnfänger\nTherapie"
+    },
+    {
+      "fieldname": "health_notes",
+      "fieldtype": "Text Editor",
+      "label": "Gesundheitliche Einschränkungen"
+    },
+    {
+      "fieldname": "sb_capacity",
+      "fieldtype": "Section Break",
+      "label": "Kapazität & Zeiten"
+    },
+    {
+      "fieldname": "max_weight_kg",
+      "fieldtype": "Int",
+      "label": "Max. Gewicht (kg)",
+      "reqd": 1
+    },
+    {
+      "fieldname": "max_hours_per_day",
+      "fieldtype": "Float",
+      "label": "Max. Stunden pro Tag",
+      "default": "3"
+    },
+    {
+      "fieldname": "cb_capacity",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "max_hours_per_week",
+      "fieldtype": "Float",
+      "label": "Max. Stunden pro Woche",
+      "default": "15"
+    },
+    {
+      "fieldname": "rest_minutes",
+      "fieldtype": "Int",
+      "label": "Pause nach Einsatz (Minuten)",
+      "default": "30"
+    }
   ],
   "permissions": [
-    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
-    {"role": "Riding School Backoffice", "read": 1, "write": 1, "create": 1, "delete": 1},
-    {"role": "Riding School Instructor", "read": 1},
-    {"role": "Riding School Rider", "read": 1}
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Riding School Backoffice",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Riding School Instructor",
+      "read": 1
+    },
+    {
+      "role": "Riding School Rider",
+      "read": 1
+    }
   ],
-  "track_changes": 1
+  "track_changes": 1,
+  "title_field": "horse_name",
+  "show_title_field_in_link": 1
 }
