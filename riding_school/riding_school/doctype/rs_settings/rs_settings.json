@@ -1,0 +1,49 @@
+{
+  "name": "RS Settings",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "issingle": 1,
+  "fields": [
+    {
+      "fieldname": "sb_cancellation",
+      "fieldtype": "Section Break",
+      "label": "Stornierung"
+    },
+    {
+      "fieldname": "cancellation_hours",
+      "fieldtype": "Int",
+      "label": "Stornierungsfrist (Stunden)",
+      "default": "24",
+      "description": "Wie viele Stunden vor der Stunde kann kostenlos storniert werden"
+    },
+    {
+      "fieldname": "late_cancellation_fee",
+      "fieldtype": "Select",
+      "label": "Verhalten bei später Stornierung",
+      "options": "Stunde wird berechnet\nZeitkarte wird abgebucht\nKeine Konsequenz",
+      "default": "Stunde wird berechnet"
+    },
+    {
+      "fieldname": "sb_booking",
+      "fieldtype": "Section Break",
+      "label": "Buchung"
+    },
+    {
+      "fieldname": "max_advance_booking_days",
+      "fieldtype": "Int",
+      "label": "Max. Vorauszeitraum (Tage)",
+      "default": "30",
+      "description": "Wie weit im Voraus kann gebucht werden"
+    },
+    {
+      "fieldname": "max_bookings_per_week",
+      "fieldtype": "Int",
+      "label": "Max. Buchungen pro Woche pro Reitschüler",
+      "default": "3"
+    }
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1},
+    {"role": "Riding School Backoffice", "read": 1, "write": 1}
+  ]
+}

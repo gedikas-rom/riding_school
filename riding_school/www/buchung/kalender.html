@@ -529,6 +529,18 @@
   </div>
 </div>
 
+<!-- Stornieren Modal -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal">
+    <h3>Buchung stornieren</h3>
+    <div class="modal-info" id="cancel-modal-info"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCancelModal()">Abbrechen</button>
+      <button class="btn-book" style="background:var(--accent)" onclick="confirmCancel()">Stornieren</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   const DAYS_LONG = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -548,7 +560,11 @@
   }
 
   function formatDate(d) {
-    return d.toISOString().split('T')[0];
+    // Timezone-sicher: lokale Datum-Teile verwenden statt ISO-String
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
   }
 
   function formatDisplay(d) {
@@ -609,7 +625,7 @@
     let myCount = 0;
     slots.forEach(s => {
       const hour = parseInt(s.start_time.split(':')[0]);
-      const key = s.slot_date + '_' + hour;
+      const key = s.slot_date + '_' + hour;  // slot_date bleibt als String
       if (!slotMap[key]) slotMap[key] = [];
       slotMap[key].push(s);
       if (s.is_my_booking) myCount++;
@@ -636,15 +652,16 @@
       html += `<div class="time-slot">${hour}:00</div>`;
 
       days.forEach(d => {
-        const key = formatDate(d) + '_' + hour;
+        const key = formatDate(d) + '_' + hour;  // formatDate gibt YYYY-MM-DD zurück
         const daySlots = slotMap[key] || [];
 
         html += '<div class="day-cell">';
         daySlots.forEach(s => {
           if (s.is_my_booking) {
-            const isCompleted = s.status === 'Completed';
+            const isCompleted = s.status === 'Completed';  // kein Date-Objekt nötig
             html += `<span class="slot-pill ${isCompleted ? 'completed-own' : 'booked-own'}"
-              title="${isCompleted ? 'Abgeschlossen' : 'Deine Buchung'}: ${s.start_time.slice(0,5)}–${s.end_time.slice(0,5)}">
+              title="${isCompleted ? 'Abgeschlossen' : 'Deine Buchung'}: ${s.start_time.slice(0,5)}–${s.end_time.slice(0,5)}"
+              ${!isCompleted ? `onclick="openCancelModal('${s.booking_name}')"` : ''}>
               ✓ ${s.start_time.slice(0,5)}
             </span>`;
           } else {
@@ -771,6 +788,67 @@
     })
     .catch(() => showToast('Verbindungsfehler.', 'error'));
   }
+
+  let selectedBooking = null;
+
+  function openCancelModal(bookingName) {
+    selectedBooking = bookingName;
+    var slot = allSlots.find(function(s) { return s.booking_name === bookingName; });
+    if (!slot) return;
+    var d = new Date(slot.slot_date);
+    var dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+    var timeStr = slot.start_time.slice(0,5) + ' - ' + slot.end_time.slice(0,5) + ' Uhr';
+    document.getElementById('cancel-modal-info').innerHTML = '<strong>' + dateStr + '</strong><br>' + timeStr + '<br><br><span style="color:gray">Pruefe Stornierungsbedingungen...</span>';
+    document.getElementById('cancel-modal').style.display = 'flex';
+    fetch('/api/method/riding_school.riding_school.api.booking.get_cancellation_info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ booking_name: bookingName })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      var info = data.message;
+      var warn = '';
+      if (info.is_late) {
+        warn = '<div style="background:rgba(139,26,26,0.08);border:1px solid rgba(139,26,26,0.2);border-radius:8px;padding:0.75rem;margin-top:0.75rem;color:#8B1A1A"><b>Kostenpflichtige Stornierung</b><br>Stornierungsfrist von ' + info.cancellation_hours + ' Stunden wurde unterschritten.<br><b>Konsequenz: ' + info.late_cancellation_fee + '</b></div>';
+      } else {
+        warn = '<div style="background:rgba(45,106,79,0.08);border:1px solid rgba(45,106,79,0.2);border-radius:8px;padding:0.75rem;margin-top:0.75rem;color:#2D6A4F">Kostenlose Stornierung (noch ' + info.hours_until_slot + ' Std bis zur Stunde)</div>';
+      }
+      document.getElementById('cancel-modal-info').innerHTML = '<strong>' + dateStr + '</strong><br>' + timeStr + warn;
+    });
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancel-modal').style.display = 'none';
+    selectedBooking = null;
+  }
+
+  function confirmCancel() {
+    if (!selectedBooking) return;
+
+    fetch('/api/method/riding_school.riding_school.api.booking.cancel_booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Frappe-CSRF-Token': getCsrf()
+      },
+      body: JSON.stringify({ booking_name: selectedBooking })
+    })
+    .then(r => r.json())
+    .then(data => {
+      closeCancelModal();
+      if (data.message && data.message.success) {
+        showToast(data.message.message, data.message.is_late ? 'error' : 'success');
+        loadSlots();
+        loadTimeCards();
+      } else {
+        showToast(data.message?.error || 'Fehler beim Stornieren.', 'error');
+      }
+    })
+    .catch(() => showToast('Verbindungsfehler.', 'error'));
+  }
+
+  document.getElementById('cancel-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeCancelModal();
+  });
 
   function showToast(msg, type) {
     const toast = document.createElement('div');
