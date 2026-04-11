@@ -76,10 +76,11 @@
       "fieldname": "status",
       "fieldtype": "Select",
       "label": "Status",
-      "options": "Open\nBooked\nCompleted\nCancelled",
+      "options": "Open\nPlanned\nReleased\nBooked\nCompleted\nCancelled",
       "default": "Open",
       "reqd": 1,
-      "in_list_view": 1
+      "in_list_view": 1,
+      "read_only": 1
     },
     {
       "fieldname": "sb_logbook",

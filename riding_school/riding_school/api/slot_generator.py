@@ -165,7 +165,9 @@ def get_calendar_events(start, end, field_map, filters=None, doctype="RS Lesson 
 
     STATUS_COLORS = {
         "Open": "#f5a623",
-        "Booked": "#5e9bfc",
+        "Planned": "#aed6f1",
+        "Released": "#2e86c1",
+        "Booked": "#a9dfbf",
         "Completed": "#27ae60",
         "Cancelled": "#e74c3c"
     }
@@ -193,3 +195,76 @@ def get_calendar_events(start, end, field_map, filters=None, doctype="RS Lesson 
         })
 
     return result
+
+
+@frappe.whitelist()
+def release_all_planned_slots(week_start_date):
+    """Gibt alle Planned Slots einer Woche frei"""
+    from datetime import datetime, timedelta
+    week_start = datetime.strptime(week_start_date, "%Y-%m-%d").date()
+    week_end = week_start + timedelta(days=6)
+
+    slots = frappe.get_all("RS Lesson Slot",
+        filters={
+            "slot_date": ["between", [week_start, week_end]],
+            "status": "Planned"
+        },
+        pluck="name"
+    )
+
+    for slot_name in slots:
+        frappe.db.set_value("RS Lesson Slot", slot_name, "status", "Released")
+
+    frappe.db.commit()
+    return {
+        "success": True,
+        "message": f"{len(slots)} Slots freigegeben."
+    }
+
+
+@frappe.whitelist()
+def set_slot_status(slot_name, status):
+    """Setzt den Status eines Slots"""
+    allowed_transitions = {
+        'Open': ['Planned', 'Cancelled'],
+        'Planned': ['Open', 'Released', 'Cancelled'],
+        'Released': ['Planned', 'Open', 'Booked', 'Cancelled'],
+        'Booked': ['Completed', 'Cancelled'],
+    }
+
+    slot = frappe.get_doc("RS Lesson Slot", slot_name)
+    allowed = allowed_transitions.get(slot.status, [])
+
+    if status not in allowed:
+        frappe.throw(
+            _("Statusübergang von '{0}' nach '{1}' ist nicht erlaubt.").format(slot.status, status)
+        )
+
+    slot.status = status
+    slot.save(ignore_permissions=True)
+
+    # Bei Abschluss: Zeitkarte abbuchen
+    if status == "Completed":
+        booking = frappe.db.get_value(
+            "RS Booking",
+            {"lesson_slot": slot_name, "status": ["!=", "Cancelled"], "billing_type": "Time Card"},
+            ["name", "time_card"],
+            as_dict=True
+        )
+        if booking and booking.time_card:
+            tc = frappe.get_doc("RS Time Card", booking.time_card)
+            tc.used_lessons = (tc.used_lessons or 0) + 1
+            tc.remaining_lessons = (tc.total_lessons or 0) - tc.used_lessons
+            if tc.remaining_lessons <= 0:
+                tc.status = "Exhausted"
+            tc.save(ignore_permissions=True)
+            frappe.logger().info(f"Zeitkarte {tc.name} abgebucht: {tc.remaining_lessons} verbleibend")
+
+        # Buchung auf Completed setzen
+        frappe.db.set_value("RS Booking", 
+            {"lesson_slot": slot_name, "status": ["!=", "Cancelled"]},
+            "status", "Completed"
+        )
+
+    frappe.db.commit()
+    return {"success": True, "status": status}

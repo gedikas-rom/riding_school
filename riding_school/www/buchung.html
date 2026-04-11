@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reitschule – Buchung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --earth-dark: #2C1A0E;
+    --earth-mid: #6B3F20;
+    --earth-warm: #A0522D;
+    --earth-light: #C8956C;
+    --sand: #E8D5B7;
+    --cream: #FAF6F0;
+    --text-dark: #1E1008;
+    --text-mid: #5C3D2E;
+    --text-light: #8B6347;
+    --accent: #8B1A1A;
+  }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    background-color: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(160, 82, 45, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(107, 63, 32, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(200, 149, 108, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .login-container {
+    width: 100%;
+    max-width: 440px;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .horse-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    display: block;
+    opacity: 0.85;
+  }
+
+  .logo-area h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--earth-dark);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .logo-area p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 0.4rem;
+    font-weight: 300;
+  }
+
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow:
+      0 2px 4px rgba(44, 26, 14, 0.04),
+      0 8px 24px rgba(44, 26, 14, 0.08),
+      0 0 0 1px rgba(160, 82, 45, 0.08);
+  }
+
+  .card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--earth-dark);
+    margin-bottom: 0.4rem;
+  }
+
+  .card .subtitle {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    font-weight: 300;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-mid);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1.5px solid var(--sand);
+    border-radius: 10px;
+    font-family: 'Jost', sans-serif;
+    font-size: 1rem;
+    color: var(--text-dark);
+    background: var(--cream);
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  input:focus {
+    border-color: var(--earth-warm);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.1);
+  }
+
+  input::placeholder { color: var(--text-light); opacity: 0.6; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--earth-dark);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+  }
+
+  .btn-primary:hover {
+    background: var(--earth-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(44, 26, 14, 0.2);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .error-msg {
+    background: rgba(139, 26, 26, 0.08);
+    border: 1px solid rgba(139, 26, 26, 0.2);
+    color: var(--accent);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--sand);
+    margin: 1.5rem 0;
+  }
+
+  .footer-text {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 1.5rem;
+    font-weight: 300;
+  }
+
+  @media (max-width: 480px) {
+    .login-container { padding: 1rem; }
+    .card { padding: 1.75rem; }
+  }
+</style>
+</head>
+<body>
+<div class="login-container">
+  <div class="logo-area">
+    <img class="horse-icon" src="/assets/riding_school/images/horse.svg" alt="Reitschule">
+    <h1>Reitschule</h1>
+    <p>Buchungsportal</p>
+  </div>
+
+  <div class="card">
+    <h2>Willkommen</h2>
+    <p class="subtitle">Bitte melde dich mit deinen Zugangsdaten an.</p>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="form-group">
+      <label>E-Mail</label>
+      <input type="email" id="email" placeholder="deine@email.de" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label>Passwort</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">
+      Anmelden
+    </button>
+
+    <div class="divider"></div>
+    <div class="footer-text">
+      Probleme beim Login? Wende dich an die Reitschule.
+    </div>
+  </div>
+</div>
+
+<script>
+  // Enter-Taste
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  function doLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+    const errorMsg = document.getElementById('error-msg');
+
+    if (!email || !password) {
+      showError('Bitte E-Mail und Passwort eingeben.');
+      return;
+    }
+
+    btn.textContent = 'Anmelden…';
+    btn.disabled = true;
+    errorMsg.style.display = 'none';
+
+    fetch('/api/method/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': 'fetch' },
+      body: JSON.stringify({ usr: email, pwd: password })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.message === 'Logged In') {
+        window.location.href = '/buchung/kalender';
+      } else {
+        showError('E-Mail oder Passwort falsch.');
+        btn.textContent = 'Anmelden';
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      showError('Verbindungsfehler. Bitte versuche es erneut.');
+      btn.textContent = 'Anmelden';
+      btn.disabled = false;
+    });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+</script>
+</body>
+</html>
