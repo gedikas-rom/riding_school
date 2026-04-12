@@ -1,0 +1,21 @@
+{
+  "name": "RS Rider Log",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "fields": [
+    {"fieldname": "rider", "fieldtype": "Link", "label": "Reitschüler", "options": "RS Rider", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "lesson_slot", "fieldtype": "Link", "label": "Zeitslot", "options": "RS Lesson Slot", "reqd": 1},
+    {"fieldname": "log_date", "fieldtype": "Date", "label": "Datum", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "sb_ratings", "fieldtype": "Section Break", "label": "Bewertungen"},
+    {"fieldname": "lesson_rating", "fieldtype": "Rating", "label": "Stundenbewertung"},
+    {"fieldname": "instructor_rating", "fieldtype": "Rating", "label": "Reitlehrer Bewertung"},
+    {"fieldname": "sb_comment", "fieldtype": "Section Break", "label": "Tagebuch"},
+    {"fieldname": "rider_comment", "fieldtype": "Text Editor", "label": "Mein Kommentar"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Riding School Backoffice", "read": 1},
+    {"role": "Riding School Rider", "read": 1, "write": 1, "create": 1}
+  ],
+  "track_changes": 1
+}

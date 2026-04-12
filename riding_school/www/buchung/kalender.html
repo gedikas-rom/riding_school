@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buchungsportal</title>
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>Mein Portal – Reitschule</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -62,7 +63,6 @@
     font-family: 'Playfair Display', serif;
     font-size: 1.1rem;
     font-weight: 400;
-    letter-spacing: 0.02em;
   }
 
   .header-right {
@@ -89,12 +89,43 @@
     transition: all 0.2s;
   }
 
-  .logout-btn:hover {
-    background: rgba(255,255,255,0.1);
-    color: white;
+  .logout-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  /* Tab Navigation */
+  .tab-nav {
+    background: white;
+    border-bottom: 1px solid var(--sand);
+    padding: 0 1.5rem;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
   }
 
-  /* Main Layout */
+  .tab-btn {
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--earth-warm); }
+
+  .tab-btn.active {
+    color: var(--earth-dark);
+    border-bottom-color: var(--earth-warm);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Main */
   .main {
     max-width: 1100px;
     margin: 0 auto;
@@ -104,7 +135,7 @@
   /* Info Cards */
   .info-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
@@ -184,10 +215,7 @@
     justify-content: center;
   }
 
-  .week-nav button:hover {
-    border-color: var(--earth-warm);
-    background: var(--cream);
-  }
+  .week-nav button:hover { border-color: var(--earth-warm); background: var(--cream); }
 
   .week-label {
     font-size: 0.9rem;
@@ -211,9 +239,7 @@
     border-right: 1px solid rgba(232,213,183,0.5);
   }
 
-  .day-header.time-col {
-    background: var(--cream);
-  }
+  .day-header.time-col { background: var(--cream); }
 
   .day-header .day-name {
     font-size: 0.7rem;
@@ -264,7 +290,6 @@
     border-bottom: 1px solid rgba(232,213,183,0.3);
     min-height: 48px;
     padding: 2px;
-    position: relative;
   }
 
   .slot-pill {
@@ -288,7 +313,6 @@
   .slot-pill.released:hover {
     background: rgba(45, 106, 79, 0.2);
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(45,106,79,0.15);
   }
 
   .slot-pill.booked-own {
@@ -302,34 +326,162 @@
     color: #888;
     border: 1px solid rgba(100, 100, 100, 0.2);
     text-decoration: line-through;
+    cursor: pointer;
   }
 
-  /* Loading */
-  .loading {
+  .slot-pill.completed-own:hover {
+    background: rgba(160, 82, 45, 0.08);
+    border-color: var(--earth-light);
+    color: var(--earth-mid);
+  }
+
+  /* Reitlehrer Tagesansicht */
+  .day-overview {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(44,26,14,0.06), 0 0 0 1px rgba(160,82,45,0.08);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .day-overview-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--sand);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .day-overview-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+  }
+
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .date-nav button {
+    background: none;
+    border: 1.5px solid var(--sand);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--earth-mid);
+    transition: all 0.2s;
+  }
+
+  .date-nav button:hover { border-color: var(--earth-warm); }
+
+  .date-label {
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    min-width: 180px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .slot-list { padding: 1rem; }
+
+  .slot-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--cream);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--sand);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .slot-item:last-child { margin-bottom: 0; }
+
+  .slot-item-info { flex: 1; }
+
+  .slot-item-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--earth-dark);
+  }
+
+  .slot-item-details {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.2rem;
+  }
+
+  .slot-item-status {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+  }
+
+  .status-released { background: rgba(45,106,79,0.1); color: var(--success); }
+  .status-booked { background: rgba(107,63,32,0.1); color: var(--earth-mid); }
+  .status-completed { background: rgba(100,100,100,0.1); color: #888; }
+
+  .slot-item-actions { display: flex; gap: 0.5rem; }
+
+  .btn-small {
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-complete {
+    background: var(--earth-dark);
+    color: white;
+  }
+
+  .btn-complete:hover { background: var(--earth-mid); }
+
+  .btn-log {
+    background: none;
+    border: 1.5px solid var(--sand);
+    color: var(--text-mid);
+  }
+
+  .btn-log:hover { border-color: var(--earth-warm); }
+
+  .empty-state {
     text-align: center;
     padding: 3rem;
     color: var(--text-light);
     font-size: 0.9rem;
   }
 
-  /* Modal */
+  /* Logbuch Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(44,26,14,0.5);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 200;
     padding: 1rem;
-    display: none;
   }
 
   .modal {
     background: white;
     border-radius: 16px;
     padding: 2rem;
-    max-width: 420px;
+    max-width: 480px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
   }
@@ -345,7 +497,7 @@
     background: var(--cream);
     border-radius: 8px;
     padding: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     font-size: 0.875rem;
     color: var(--text-mid);
     line-height: 1.6;
@@ -353,12 +505,27 @@
 
   .modal-info strong { color: var(--earth-dark); }
 
-  .modal-actions {
-    display: flex;
-    gap: 0.75rem;
+  textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1.5px solid var(--sand);
+    border-radius: 10px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    background: var(--cream);
+    resize: vertical;
+    min-height: 120px;
+    outline: none;
+    transition: all 0.2s;
+    margin-bottom: 1.25rem;
   }
 
-  .btn-book {
+  textarea:focus { border-color: var(--earth-warm); background: white; }
+
+  .modal-actions { display: flex; gap: 0.75rem; }
+
+  .btn-primary {
     flex: 1;
     padding: 0.8rem;
     background: var(--earth-dark);
@@ -372,9 +539,9 @@
     transition: all 0.2s;
   }
 
-  .btn-book:hover { background: var(--earth-mid); }
+  .btn-primary:hover { background: var(--earth-mid); }
 
-  .btn-cancel {
+  .btn-secondary {
     padding: 0.8rem 1.25rem;
     background: none;
     border: 1.5px solid var(--sand);
@@ -386,7 +553,7 @@
     transition: all 0.2s;
   }
 
-  .btn-cancel:hover { border-color: var(--earth-light); }
+  .btn-secondary:hover { border-color: var(--earth-light); }
 
   /* Legende */
   .legend {
@@ -411,6 +578,100 @@
     border-radius: 3px;
   }
 
+  /* Tagebuch */
+  .diary-entry {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(44,26,14,0.06), 0 0 0 1px rgba(160,82,45,0.08);
+  }
+
+  .diary-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .diary-date {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--earth-dark);
+  }
+
+  .diary-meta {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.2rem;
+  }
+
+  .stars {
+    display: flex;
+    gap: 2px;
+    cursor: pointer;
+  }
+
+  .star {
+    font-size: 1.3rem;
+    color: var(--sand);
+    transition: color 0.1s;
+    user-select: none;
+  }
+
+  .star.filled { color: var(--earth-warm); }
+  .star:hover { color: var(--earth-light); }
+
+  .ratings-row {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  .rating-item { }
+
+  .rating-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+  }
+
+  .diary-comment {
+    font-size: 0.875rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-top: 0.75rem;
+  }
+
+  .instructor-comment {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    border-left: 3px solid var(--sand);
+    padding-left: 0.75rem;
+    margin-top: 0.75rem;
+    font-style: italic;
+  }
+
+  .btn-edit-log {
+    font-size: 0.75rem;
+    color: var(--earth-warm);
+    background: none;
+    border: 1px solid var(--sand);
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Jost', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-edit-log:hover { border-color: var(--earth-warm); }
+
   @media (max-width: 640px) {
     .calendar-grid { grid-template-columns: 40px repeat(7, 1fr); }
     .day-header .day-name { font-size: 0.6rem; }
@@ -418,6 +679,7 @@
     .slot-pill { font-size: 0.65rem; padding: 0.2rem 0.3rem; }
     .time-slot { font-size: 0.6rem; }
     .user-name { display: none; }
+    .tab-btn { padding: 0.75rem 1rem; font-size: 0.8rem; }
   }
 </style>
 </head>
@@ -429,80 +691,137 @@
     <h1>Reitschule</h1>
   </div>
   <div class="header-right">
-    <span class="user-name" id="user-name">{{ rider.full_name or user_email }}</span>
+    <span class="user-name">{{ display_name }}</span>
     <button class="logout-btn" onclick="logout()">Abmelden</button>
   </div>
 </header>
 
-<main class="main">
+<!-- Tab Navigation -->
+<nav class="tab-nav">
+  {% if is_rider %}
+  <button class="tab-btn active" onclick="showTab('rider')">🐴 Meine Buchungen</button>
+  {% endif %}
+  {% if is_instructor %}
+  <button class="tab-btn" onclick="showTab('instructor')">📋 Reitlehrer</button>
+  {% endif %}
+  <button class="tab-btn" onclick="showTab('diary')">📖 Tagebuch</button>
+  {% if is_backoffice %}
+  <button class="tab-btn" onclick="showTab('backoffice')">📊 Backoffice</button>
+  {% endif %}
+</nav>
 
-  <!-- Info Cards -->
-  <div class="info-row">
-    <div class="info-card">
-      <div class="label">Level</div>
-      <div class="value">{{ rider.skill_level or '–' }}</div>
-      <div class="sub">Aktuelles Reitniveau</div>
+<!-- REITSCHÜLER TAB -->
+{% if is_rider %}
+<div id="tab-rider" class="tab-content active">
+  <div class="main">
+    <div class="info-row">
+      <div class="info-card">
+        <div class="label">Level</div>
+        <div class="value">{{ rider.skill_level or '–' }}</div>
+        <div class="sub">Aktuelles Reitniveau</div>
+      </div>
+      {% if time_cards %}
+      <div class="info-card">
+        <div class="label">Zeitkarte</div>
+        <div class="value">{{ time_cards[0].remaining_lessons or 0 }}</div>
+        <div class="sub">Stunden verbleibend</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Gültig bis</div>
+        <div class="value" style="font-size:1.1rem">{{ time_cards[0].valid_until or '–' }}</div>
+        <div class="sub">Ablaufdatum</div>
+      </div>
+      {% else %}
+      <div class="info-card">
+        <div class="label">Zeitkarte</div>
+        <div class="value">–</div>
+        <div class="sub">Keine aktive Zeitkarte</div>
+      </div>
+      {% endif %}
+      <div class="info-card">
+        <div class="label">Diese Woche</div>
+        <div class="value" id="my-booking-count">–</div>
+        <div class="sub">Meine Buchungen</div>
+      </div>
     </div>
-    {% if time_cards %}
-    <div class="info-card">
-      <div class="label">Zeitkarte</div>
-      <div class="value">{{ time_cards[0].remaining_lessons or 0 }}</div>
-      <div class="sub">Stunden verbleibend</div>
-    </div>
-    <div class="info-card">
-      <div class="label">Gültig bis</div>
-      <div class="value" style="font-size:1.1rem">{{ time_cards[0].valid_until or '–' }}</div>
-      <div class="sub">Ablaufdatum Zeitkarte</div>
-    </div>
-    {% else %}
-    <div class="info-card">
-      <div class="label">Zeitkarte</div>
-      <div class="value">–</div>
-      <div class="sub">Keine aktive Zeitkarte</div>
-    </div>
-    {% endif %}
-    <div class="info-card">
-      <div class="label">Meine Buchungen</div>
-      <div class="value" id="my-booking-count">–</div>
-      <div class="sub">Diese Woche</div>
+
+    <div class="calendar-section">
+      <div class="calendar-header">
+        <h2>Verfügbare Termine</h2>
+        <div class="week-nav">
+          <button onclick="changeWeek(-1)">&#8592;</button>
+          <span class="week-label" id="week-label">Lädt…</span>
+          <button onclick="changeWeek(1)">&#8594;</button>
+        </div>
+      </div>
+      <div id="calendar-container">
+        <div class="empty-state">Termine werden geladen…</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(45,106,79,0.3)"></div>
+          Verfügbar
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(107,63,32,0.3)"></div>
+          Meine Buchung
+        </div>
+      </div>
     </div>
   </div>
+</div>
+{% endif %}
 
-  <!-- Kalender -->
-  <div class="calendar-section">
-    <div class="calendar-header">
-      <h2>Verfügbare Termine</h2>
-      <div class="week-nav">
-        <button onclick="changeWeek(-1)">&#8592;</button>
-        <span class="week-label" id="week-label">Lädt…</span>
-        <button onclick="changeWeek(1)">&#8594;</button>
+<!-- REITLEHRER TAB -->
+{% if is_instructor %}
+<div id="tab-instructor" class="tab-content">
+  <div class="main">
+    <div class="day-overview">
+      <div class="day-overview-header">
+        <h2>Meine Stunden</h2>
+        <div class="date-nav">
+          <button onclick="changeDay(-1)">&#8592;</button>
+          <span class="date-label" id="day-label">Lädt…</span>
+          <button onclick="changeDay(1)">&#8594;</button>
+        </div>
       </div>
-    </div>
-
-    <div id="calendar-container">
-      <div class="loading">Termine werden geladen…</div>
-    </div>
-
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-dot" style="background:rgba(45,106,79,0.3)"></div>
-        Verfügbar
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background:rgba(107,63,32,0.3)"></div>
-        Meine Buchung
+      <div id="instructor-slots" class="slot-list">
+        <div class="empty-state">Wird geladen…</div>
       </div>
     </div>
   </div>
+</div>
+{% endif %}
 
-</main>
+<!-- TAGEBUCH TAB -->
+<div id="tab-diary" class="tab-content">
+  <div class="main">
+    <div id="diary-container">
+      <div class="empty-state">Tagebuch wird geladen…</div>
+    </div>
+  </div>
+</div>
+
+<!-- BACKOFFICE TAB -->
+{% if is_backoffice %}
+<div id="tab-backoffice" class="tab-content">
+  <div class="main">
+    <div class="info-card" style="margin-bottom:1rem">
+      <div class="label">Backoffice Dashboard</div>
+      <div class="sub" style="margin-top:0.5rem">Kommt bald – hier erscheinen Auslastung, Umsatz und offene Buchungen.</div>
+    </div>
+    <a href="/app/riding-school" style="display:inline-block;padding:0.75rem 1.5rem;background:var(--earth-dark);color:white;border-radius:10px;text-decoration:none;font-family:'Jost',sans-serif;font-size:0.9rem;">
+      ERPNext Backoffice öffnen →
+    </a>
+  </div>
+</div>
+{% endif %}
 
 <!-- Buchungs-Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h3>Termin buchen</h3>
     <div class="modal-info" id="modal-info"></div>
-
     <div style="margin-bottom:1.25rem;">
       <label style="display:block;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-light);margin-bottom:0.5rem;font-weight:500;">Abrechnung</label>
       <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
@@ -521,10 +840,9 @@
         </select>
       </div>
     </div>
-
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
-      <button class="btn-book" onclick="confirmBooking()">Jetzt buchen</button>
+      <button class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmBooking()">Jetzt buchen</button>
     </div>
   </div>
 </div>
@@ -535,21 +853,88 @@
     <h3>Buchung stornieren</h3>
     <div class="modal-info" id="cancel-modal-info"></div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeCancelModal()">Abbrechen</button>
-      <button class="btn-book" style="background:var(--accent)" onclick="confirmCancel()">Stornieren</button>
+      <button class="btn-secondary" onclick="closeCancelModal()">Abbrechen</button>
+      <button class="btn-primary" style="background:var(--accent)" onclick="confirmCancel()">Stornieren</button>
+    </div>
+  </div>
+</div>
+
+<!-- Logbuch Modal (Reitlehrer) -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal">
+    <h3>Logbuch Eintrag</h3>
+    <div class="modal-info" id="log-modal-info"></div>
+    <textarea id="log-text" placeholder="Kommentar zur Stunde…"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeLogModal()">Abbrechen</button>
+      <button class="btn-primary" onclick="saveLogEntry()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tagebuch Modal (Reitschüler) -->
+<div class="modal-overlay" id="diary-modal">
+  <div class="modal">
+    <h3>Mein Tagebucheintrag</h3>
+    <div class="modal-info" id="diary-modal-info"></div>
+    <div class="ratings-row" style="margin-bottom:1rem">
+      <div class="rating-item">
+        <div class="rating-label">Stunde</div>
+        <div class="stars" id="lesson-stars">
+          <span class="star" onclick="setRating('lesson',1)">★</span>
+          <span class="star" onclick="setRating('lesson',2)">★</span>
+          <span class="star" onclick="setRating('lesson',3)">★</span>
+          <span class="star" onclick="setRating('lesson',4)">★</span>
+          <span class="star" onclick="setRating('lesson',5)">★</span>
+        </div>
+      </div>
+      <div class="rating-item">
+        <div class="rating-label">Reitlehrer</div>
+        <div class="stars" id="instructor-stars">
+          <span class="star" onclick="setRating('instructor',1)">★</span>
+          <span class="star" onclick="setRating('instructor',2)">★</span>
+          <span class="star" onclick="setRating('instructor',3)">★</span>
+          <span class="star" onclick="setRating('instructor',4)">★</span>
+          <span class="star" onclick="setRating('instructor',5)">★</span>
+        </div>
+      </div>
+    </div>
+    <textarea id="diary-text" placeholder="Wie war die Stunde? Was habe ich gelernt?"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDiaryModal()">Abbrechen</button>
+      <button class="btn-primary" onclick="saveDiaryEntry()">Speichern</button>
     </div>
   </div>
 </div>
 
 <script>
+  // ===== KONSTANTEN =====
   const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   const DAYS_LONG = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   const HOURS = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
 
+  // ===== STATE =====
   let currentWeekStart = getMonday(new Date());
+  let currentDay = new Date();
   let selectedSlot = null;
+  let selectedBooking = null;
+  let selectedInstructorSlot = null;
   let allSlots = [];
+  let timeCards = [];
 
+  // ===== TABS =====
+  function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const tab = document.getElementById('tab-' + name);
+    if (tab) tab.classList.add('active');
+    event.target.classList.add('active');
+
+    if (name === 'instructor') loadInstructorSlots();
+    if (name === 'diary') loadDiary();
+  }
+
+  // ===== HILFSFUNKTIONEN =====
   function getMonday(d) {
     d = new Date(d);
     const day = d.getDay();
@@ -560,7 +945,6 @@
   }
 
   function formatDate(d) {
-    // Timezone-sicher: lokale Datum-Teile verwenden statt ISO-String
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -571,6 +955,26 @@
     return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   }
 
+  function formatDisplayLong(d) {
+    return d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  function getCsrf() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.getAttribute('content');
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrf_token='));
+    if (cookie) return decodeURIComponent(cookie.split('=')[1]);
+    return 'fetch';
+  }
+
+  function logout() {
+    fetch('/api/method/logout', {
+      method: 'POST',
+      headers: { 'X-Frappe-CSRF-Token': getCsrf() }
+    }).then(() => window.location.href = '/buchung');
+  }
+
+  // ===== REITSCHÜLER KALENDER =====
   function changeWeek(dir) {
     currentWeekStart = new Date(currentWeekStart);
     currentWeekStart.setDate(currentWeekStart.getDate() + (dir * 7));
@@ -580,22 +984,17 @@
   function loadSlots() {
     const weekEnd = new Date(currentWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-
     const startStr = formatDate(currentWeekStart);
     const endStr = formatDate(weekEnd);
 
     document.getElementById('week-label').textContent =
       formatDisplay(currentWeekStart) + ' – ' + formatDisplay(weekEnd);
-
     document.getElementById('calendar-container').innerHTML =
-      '<div class="loading">Termine werden geladen…</div>';
+      '<div class="empty-state">Termine werden geladen…</div>';
 
     fetch('/api/method/riding_school.riding_school.api.booking.get_available_slots', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Frappe-CSRF-Token': getCsrf()
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
       body: JSON.stringify({ start: startStr, end: endStr })
     })
     .then(r => r.json())
@@ -605,14 +1004,12 @@
     })
     .catch(() => {
       document.getElementById('calendar-container').innerHTML =
-        '<div class="loading">Fehler beim Laden der Termine.</div>';
+        '<div class="empty-state">Fehler beim Laden der Termine.</div>';
     });
   }
 
   function renderCalendar(slots) {
     const today = formatDate(new Date());
-
-    // Wochentage aufbauen
     let days = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(currentWeekStart);
@@ -620,67 +1017,65 @@
       days.push(d);
     }
 
-    // Slots nach Datum+Stunde gruppieren
     const slotMap = {};
     let myCount = 0;
     slots.forEach(s => {
       const hour = parseInt(s.start_time.split(':')[0]);
-      const key = s.slot_date + '_' + hour;  // slot_date bleibt als String
+      const key = s.slot_date + '_' + hour;
       if (!slotMap[key]) slotMap[key] = [];
       slotMap[key].push(s);
       if (s.is_my_booking) myCount++;
     });
+    // Slots innerhalb jeder Stunde nach Startzeit sortieren
+    Object.keys(slotMap).forEach(key => {
+      slotMap[key].sort((a, b) => a.start_time.localeCompare(b.start_time));
+    });
 
-    document.getElementById('my-booking-count').textContent = myCount;
+    const countEl = document.getElementById('my-booking-count');
+    if (countEl) countEl.textContent = myCount;
 
     let html = '<div class="calendar-grid">';
-
-    // Header Zeile
     html += '<div class="day-header time-col"></div>';
     days.forEach(d => {
       const isToday = formatDate(d) === today;
-      html += `<div class="day-header ${isToday ? 'today' : ''}">
-        <div class="day-name">${DAYS[d.getDay()]}</div>
-        <div class="day-num">${d.getDate()}</div>
-      </div>`;
+      html += '<div class="day-header ' + (isToday ? 'today' : '') + '">' +
+        '<div class="day-name">' + DAYS[d.getDay()] + '</div>' +
+        '<div class="day-num">' + d.getDate() + '</div></div>';
     });
 
-    // Body
     html += '</div><div class="calendar-body">';
-
     HOURS.forEach(hour => {
-      html += `<div class="time-slot">${hour}:00</div>`;
-
+      html += '<div class="time-slot">' + hour + ':00</div>';
       days.forEach(d => {
-        const key = formatDate(d) + '_' + hour;  // formatDate gibt YYYY-MM-DD zurück
+        const key = formatDate(d) + '_' + hour;
         const daySlots = slotMap[key] || [];
-
         html += '<div class="day-cell">';
         daySlots.forEach(s => {
           if (s.is_my_booking) {
-            const isCompleted = s.status === 'Completed';  // kein Date-Objekt nötig
-            html += `<span class="slot-pill ${isCompleted ? 'completed-own' : 'booked-own'}"
-              title="${isCompleted ? 'Abgeschlossen' : 'Deine Buchung'}: ${s.start_time.slice(0,5)}–${s.end_time.slice(0,5)}"
-              ${!isCompleted ? `onclick="openCancelModal('${s.booking_name}')"` : ''}>
-              ✓ ${s.start_time.slice(0,5)}
-            </span>`;
+            const isCompleted = s.status === 'Completed';
+            const clickHandler = isCompleted
+              ? 'onclick="openDiaryModalById(\'' + s.name + '\')"'
+              : 'onclick="openCancelModal(\'' + s.booking_name + '\')"';
+            html += '<span class="slot-pill ' + (isCompleted ? 'completed-own' : 'booked-own') + '" ' +
+              clickHandler + ' title="' + (isCompleted ? 'Tagebucheintrag' : 'Stornieren') + '">' +
+              '✓ ' + s.start_time.slice(0,5) + '</span>';
           } else {
-            html += `<span class="slot-pill released"
-              onclick="openModal('${s.name}')"
-              title="Verfügbar: ${s.start_time.slice(0,5)}–${s.end_time.slice(0,5)}">
-              ${s.start_time.slice(0,5)}
-            </span>`;
+            html += '<span class="slot-pill released" onclick="openModal(\'' + s.name + '\')">' +
+              s.start_time.slice(0,5) + '</span>';
           }
         });
         html += '</div>';
       });
     });
-
     html += '</div>';
     document.getElementById('calendar-container').innerHTML = html;
   }
 
-  let timeCards = [];
+  // ===== BUCHUNGS-MODAL =====
+  function updateBillingUI(value) {
+    const tcSelect = document.getElementById('time-card-select');
+    if (tcSelect) tcSelect.style.display = value === 'Time Card' ? 'block' : 'none';
+  }
 
   function loadTimeCards() {
     fetch('/api/method/riding_school.riding_school.api.booking.get_rider_time_cards', {
@@ -693,55 +1088,40 @@
       timeCards = data.message || [];
       const select = document.getElementById('tc-select');
       const label = document.getElementById('tc-radio-label');
-
       if (!select || !label) return;
-
       if (timeCards.length === 0) {
         label.style.opacity = '0.4';
-        label.title = 'Keine aktive Zeitkarte vorhanden';
         const inp = label.querySelector('input');
         if (inp) inp.disabled = true;
       } else {
-        // Bestehende Optionen außer erste entfernen
         while (select.options.length > 1) select.remove(1);
         timeCards.forEach(tc => {
           const opt = document.createElement('option');
           opt.value = tc.name;
-          opt.textContent = `${tc.remaining_lessons} Stunden verbleibend (gültig bis ${tc.valid_until || '–'})`;
+          opt.textContent = tc.remaining_lessons + ' Stunden verbleibend (bis ' + (tc.valid_until || '–') + ')';
           select.appendChild(opt);
         });
       }
     });
   }
 
-  function updateBillingUI(value) {
-    const tcSelect = document.getElementById('time-card-select');
-    tcSelect.style.display = value === 'Time Card' ? 'block' : 'none';
-  }
-
   function openModal(slotName) {
     const slot = allSlots.find(s => s.name === slotName);
     if (!slot) return;
     selectedSlot = slot;
-
-    const d = new Date(slot.slot_date);
+    const d = new Date(slot.slot_date + 'T12:00:00');
     const dayName = DAYS_LONG[d.getDay()];
     const dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
-
-    document.getElementById('modal-info').innerHTML = `
-      <strong>${dayName}, ${dateStr}</strong><br>
-      ${slot.start_time.slice(0,5)} – ${slot.end_time.slice(0,5)} Uhr<br>
-      ${slot.instructor_name ? '<br>Reitlehrer: <strong>' + slot.instructor_name + '</strong>' : ''}
-      ${slot.horse_name ? '<br>Pferd: <strong>' + slot.horse_name + '</strong>' : ''}
-      ${slot.facility_name ? '<br>Ort: <strong>' + slot.facility_name + '</strong>' : ''}
-    `;
-
-    // Reset
+    document.getElementById('modal-info').innerHTML =
+      '<strong>' + dayName + ', ' + dateStr + '</strong><br>' +
+      slot.start_time.slice(0,5) + ' – ' + slot.end_time.slice(0,5) + ' Uhr' +
+      (slot.instructor_name ? '<br>Reitlehrer: <strong>' + slot.instructor_name + '</strong>' : '') +
+      (slot.horse_name ? '<br>Pferd: <strong>' + slot.horse_name + '</strong>' : '') +
+      (slot.facility_name ? '<br>Ort: <strong>' + slot.facility_name + '</strong>' : '');
     const singleRadio = document.querySelector('input[name="billing"][value="Single"]');
     if (singleRadio) singleRadio.checked = true;
     const tcSelect = document.getElementById('time-card-select');
     if (tcSelect) tcSelect.style.display = 'none';
-
     document.getElementById('modal').style.display = 'flex';
   }
 
@@ -752,28 +1132,18 @@
 
   function confirmBooking() {
     if (!selectedSlot) return;
-
     const billingRadio = document.querySelector('input[name="billing"]:checked');
     const billingType = billingRadio ? billingRadio.value : 'Single';
     const tcSelectEl = document.getElementById('tc-select');
     const timeCard = billingType === 'Time Card' && tcSelectEl ? tcSelectEl.value : null;
-
     if (billingType === 'Time Card' && !timeCard) {
       showToast('Bitte eine Zeitkarte auswählen.', 'error');
       return;
     }
-
     fetch('/api/method/riding_school.riding_school.api.booking.book_slot', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Frappe-CSRF-Token': getCsrf()
-      },
-      body: JSON.stringify({
-        slot_name: selectedSlot.name,
-        billing_type: billingType,
-        time_card: timeCard
-      })
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ slot_name: selectedSlot.name, billing_type: billingType, time_card: timeCard })
     })
     .then(r => r.json())
     .then(data => {
@@ -789,17 +1159,19 @@
     .catch(() => showToast('Verbindungsfehler.', 'error'));
   }
 
-  let selectedBooking = null;
-
+  // ===== STORNIEREN MODAL =====
   function openCancelModal(bookingName) {
     selectedBooking = bookingName;
     var slot = allSlots.find(function(s) { return s.booking_name === bookingName; });
     if (!slot) return;
-    var d = new Date(slot.slot_date);
+    var d = new Date(slot.slot_date + 'T12:00:00');
     var dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
     var timeStr = slot.start_time.slice(0,5) + ' - ' + slot.end_time.slice(0,5) + ' Uhr';
-    document.getElementById('cancel-modal-info').innerHTML = '<strong>' + dateStr + '</strong><br>' + timeStr + '<br><br><span style="color:gray">Pruefe Stornierungsbedingungen...</span>';
+    document.getElementById('cancel-modal-info').innerHTML =
+      '<strong>' + dateStr + '</strong><br>' + timeStr + '<br><br>' +
+      '<span style="color:gray">Prüfe Stornierungsbedingungen...</span>';
     document.getElementById('cancel-modal').style.display = 'flex';
+
     fetch('/api/method/riding_school.riding_school.api.booking.get_cancellation_info', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
@@ -810,9 +1182,10 @@
       if (info.is_late) {
         warn = '<div style="background:rgba(139,26,26,0.08);border:1px solid rgba(139,26,26,0.2);border-radius:8px;padding:0.75rem;margin-top:0.75rem;color:#8B1A1A"><b>Kostenpflichtige Stornierung</b><br>Stornierungsfrist von ' + info.cancellation_hours + ' Stunden wurde unterschritten.<br><b>Konsequenz: ' + info.late_cancellation_fee + '</b></div>';
       } else {
-        warn = '<div style="background:rgba(45,106,79,0.08);border:1px solid rgba(45,106,79,0.2);border-radius:8px;padding:0.75rem;margin-top:0.75rem;color:#2D6A4F">Kostenlose Stornierung (noch ' + info.hours_until_slot + ' Std bis zur Stunde)</div>';
+        warn = '<div style="background:rgba(45,106,79,0.08);border:1px solid rgba(45,106,79,0.2);border-radius:8px;padding:0.75rem;margin-top:0.75rem;color:#2D6A4F">Kostenlose Stornierung möglich</div>';
       }
-      document.getElementById('cancel-modal-info').innerHTML = '<strong>' + dateStr + '</strong><br>' + timeStr + warn;
+      document.getElementById('cancel-modal-info').innerHTML =
+        '<strong>' + dateStr + '</strong><br>' + timeStr + warn;
     });
   }
 
@@ -823,13 +1196,9 @@
 
   function confirmCancel() {
     if (!selectedBooking) return;
-
     fetch('/api/method/riding_school.riding_school.api.booking.cancel_booking', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Frappe-CSRF-Token': getCsrf()
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
       body: JSON.stringify({ booking_name: selectedBooking })
     })
     .then(r => r.json())
@@ -846,46 +1215,295 @@
     .catch(() => showToast('Verbindungsfehler.', 'error'));
   }
 
-  document.getElementById('cancel-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeCancelModal();
+  // ===== REITLEHRER =====
+  function changeDay(dir) {
+    currentDay = new Date(currentDay);
+    currentDay.setDate(currentDay.getDate() + dir);
+    loadInstructorSlots();
+  }
+
+  function loadInstructorSlots() {
+    const dateStr = formatDate(currentDay);
+    document.getElementById('day-label').textContent = formatDisplayLong(currentDay);
+
+    fetch('/api/method/riding_school.riding_school.api.instructor.get_instructor_slots', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ date: dateStr })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const slots = data.message || [];
+      renderInstructorSlots(slots);
+    })
+    .catch(() => {
+      document.getElementById('instructor-slots').innerHTML =
+        '<div class="empty-state">Fehler beim Laden.</div>';
+    });
+  }
+
+  function renderInstructorSlots(slots) {
+    const container = document.getElementById('instructor-slots');
+    if (slots.length === 0) {
+      container.innerHTML = '<div class="empty-state">Keine Stunden für diesen Tag.</div>';
+      return;
+    }
+
+    const statusLabels = {
+      'Open': 'Offen', 'Planned': 'Eingeplant', 'Released': 'Freigegeben',
+      'Booked': 'Gebucht', 'Completed': 'Abgeschlossen', 'Cancelled': 'Storniert'
+    };
+    const statusClass = {
+      'Released': 'status-released', 'Booked': 'status-booked', 'Completed': 'status-completed'
+    };
+
+    let html = '';
+    slots.forEach(s => {
+      const canComplete = s.status === 'Booked';
+      const canLog = s.status !== 'Cancelled';
+
+      html += '<div class="slot-item">' +
+        '<div class="slot-item-info">' +
+        '<div class="slot-item-time">' + s.start_time.slice(0,5) + ' – ' + s.end_time.slice(0,5) + ' Uhr</div>' +
+        '<div class="slot-item-details">' +
+        (s.rider_name ? '👤 ' + s.rider_name : 'Kein Reitschüler') +
+        (s.horse_name ? ' · 🐴 ' + s.horse_name : '') +
+        (s.facility_name ? ' · 📍 ' + s.facility_name : '') +
+        '</div></div>' +
+        '<span class="slot-item-status ' + (statusClass[s.status] || '') + '">' +
+        (statusLabels[s.status] || s.status) + '</span>' +
+        '<div class="slot-item-actions">';
+
+      if (canLog) {
+        html += '<button class="btn-small btn-log" onclick="openLogModal(\'' + s.name + '\', \'' +
+          s.start_time.slice(0,5) + ' - ' + s.end_time.slice(0,5) + '\', \'' +
+          (s.logbook_entry || '') + '\')">Logbuch</button>';
+      }
+      if (canComplete) {
+        html += '<button class="btn-small btn-complete" onclick="completeSlot(\'' + s.name + '\')">Abschließen</button>';
+      }
+
+      html += '</div></div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function completeSlot(slotName) {
+    if (!confirm('Stunde als abgeschlossen markieren?')) return;
+    fetch('/api/method/riding_school.riding_school.api.slot_generator.set_slot_status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ slot_name: slotName, status: 'Completed' })
+    })
+    .then(r => r.json())
+    .then(() => {
+      showToast('Stunde abgeschlossen!', 'success');
+      loadInstructorSlots();
+    });
+  }
+
+  // ===== LOGBUCH MODAL =====
+  function openLogModal(slotName, timeStr, existingEntry) {
+    selectedInstructorSlot = slotName;
+    document.getElementById('log-modal-info').innerHTML =
+      '<strong>' + formatDisplayLong(currentDay) + '</strong><br>' + timeStr + ' Uhr';
+    document.getElementById('log-text').value = existingEntry || '';
+    document.getElementById('log-modal').style.display = 'flex';
+  }
+
+  function closeLogModal() {
+    document.getElementById('log-modal').style.display = 'none';
+    selectedInstructorSlot = null;
+  }
+
+  function saveLogEntry() {
+    if (!selectedInstructorSlot) return;
+    const text = document.getElementById('log-text').value;
+    fetch('/api/method/riding_school.riding_school.api.instructor.save_logbook_entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ slot_name: selectedInstructorSlot, entry: text })
+    })
+    .then(r => r.json())
+    .then(() => {
+      closeLogModal();
+      showToast('Logbuch gespeichert!', 'success');
+      loadInstructorSlots();
+    });
+  }
+
+  // ===== MODAL CLICK OUTSIDE =====
+  ['modal', 'cancel-modal', 'log-modal', 'diary-modal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.style.display = 'none';
+      }
+    });
   });
 
+  // ===== TOAST =====
   function showToast(msg, type) {
     const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-      background: ${type === 'success' ? '#2D6A4F' : '#8B1A1A'};
-      color: white; padding: 0.75rem 1.5rem; border-radius: 10px;
-      font-family: 'Jost', sans-serif; font-size: 0.9rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300;
-      transition: opacity 0.3s;
-    `;
+    toast.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);' +
+      'background:' + (type === 'success' ? '#2D6A4F' : '#8B1A1A') + ';color:white;' +
+      'padding:0.75rem 1.5rem;border-radius:10px;font-family:\'Jost\',sans-serif;' +
+      'font-size:0.9rem;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:300;transition:opacity 0.3s;';
     toast.textContent = msg;
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
   }
 
-  function getCsrf() {
-    return document.cookie.split(';')
-      .find(c => c.trim().startsWith('csrf_token='))
-      ?.split('=')[1] || 'fetch';
-  }
+  // ===== TAGEBUCH =====
+  let currentDiarySlot = null;
+  let lessonRating = 0;
+  let instructorRating = 0;
 
-  function logout() {
-    fetch('/api/method/logout', {
+  function loadDiary() {
+    fetch('/api/method/riding_school.riding_school.api.booking.get_rider_diary', {
       method: 'POST',
-      headers: { 'X-Frappe-CSRF-Token': getCsrf() }
-    }).then(() => window.location.href = '/buchung');
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => renderDiary(data.message || []));
   }
 
-  // Modal schließen bei Klick außerhalb
-  document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
+  function renderDiary(entries) {
+    diaryEntries = entries;
+    const container = document.getElementById('diary-container');
+    if (!container) return;
+    if (entries.length === 0) {
+      container.innerHTML = '<div class="empty-state">Noch keine abgeschlossenen Stunden.</div>';
+      return;
+    }
 
-  // Init
-  loadSlots();
-  loadTimeCards();
+    let html = '';
+    entries.forEach(e => {
+      const d = new Date(e.slot_date + 'T12:00:00');
+      const dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+      html += '<div class="diary-entry">' +
+        '<div class="diary-entry-header">' +
+        '<div>' +
+        '<div class="diary-date">' + dateStr + '</div>' +
+        '<div class="diary-meta">' +
+        e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5) + ' Uhr' +
+        (e.instructor_name ? ' · ' + e.instructor_name : '') +
+        (e.horse_name ? ' · ' + e.horse_name : '') +
+        '</div></div>' +
+        '<button class="btn-edit-log" onclick="openDiaryModalById(\'' + e.slot + '\')">✏️ Bearbeiten</button>' +
+        '</div>';
+
+      if (e.lesson_rating || e.instructor_rating) {
+        html += '<div class="ratings-row">';
+        if (e.lesson_rating) {
+          html += '<div class="rating-item"><div class="rating-label">Stunde</div><div class="stars">' +
+            renderStarsStatic(e.lesson_rating) + '</div></div>';
+        }
+        if (e.instructor_rating) {
+          html += '<div class="rating-item"><div class="rating-label">Reitlehrer</div><div class="stars">' +
+            renderStarsStatic(e.instructor_rating) + '</div></div>';
+        }
+        html += '</div>';
+      }
+
+      if (e.rider_comment) {
+        html += '<div class="diary-comment">' + e.rider_comment + '</div>';
+      }
+      if (e.instructor_comment) {
+        html += '<div class="instructor-comment">Reitlehrer: ' + e.instructor_comment + '</div>';
+      }
+
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function renderStarsStatic(count) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      html += '<span class="star ' + (i <= count ? 'filled' : '') + '">★</span>';
+    }
+    return html;
+  }
+
+  function setRating(type, value) {
+    if (type === 'lesson') {
+      lessonRating = value;
+      updateStarDisplay('lesson-stars', value);
+    } else {
+      instructorRating = value;
+      updateStarDisplay('instructor-stars', value);
+    }
+  }
+
+  function updateStarDisplay(containerId, value) {
+    const stars = document.querySelectorAll('#' + containerId + ' .star');
+    stars.forEach((s, i) => {
+      s.classList.toggle('filled', i < value);
+    });
+  }
+
+  let diaryEntries = [];
+
+  function openDiaryModalById(slotName) {
+    const e = diaryEntries.find(x => x.slot === slotName);
+    if (!e) return;
+    const d = new Date(e.slot_date + 'T12:00:00');
+    const dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    const timeStr = e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5);
+    openDiaryModal(slotName, dateStr, timeStr, e.lesson_rating||0, e.instructor_rating||0, e.rider_comment||'');
+  }
+
+  function openDiaryModal(slotName, dateStr, timeStr, lRating, iRating, comment) {
+    currentDiarySlot = slotName;
+    lessonRating = lRating;
+    instructorRating = iRating;
+    document.getElementById('diary-modal-info').innerHTML =
+      '<strong>' + dateStr + '</strong><br>' + timeStr + ' Uhr';
+    document.getElementById('diary-text').value = comment || '';
+    updateStarDisplay('lesson-stars', lRating);
+    updateStarDisplay('instructor-stars', iRating);
+    document.getElementById('diary-modal').style.display = 'flex';
+  }
+
+  function closeDiaryModal() {
+    document.getElementById('diary-modal').style.display = 'none';
+    currentDiarySlot = null;
+  }
+
+  function saveDiaryEntry() {
+    if (!currentDiarySlot) return;
+    const comment = document.getElementById('diary-text').value;
+    fetch('/api/method/riding_school.riding_school.api.booking.save_rider_log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({
+        lesson_slot: currentDiarySlot,
+        lesson_rating: lessonRating,
+        instructor_rating: instructorRating,
+        rider_comment: comment
+      })
+    })
+    .then(r => r.json())
+    .then(() => {
+      closeDiaryModal();
+      showToast('Tagebucheintrag gespeichert!', 'success');
+      loadDiary();
+    });
+  }
+
+  // ===== INIT =====
+  fetch('/api/method/frappe.utils.generate_hash')
+    .then(() => {
+      loadSlots();
+      loadTimeCards();
+    })
+    .catch(() => {
+      loadSlots();
+      loadTimeCards();
+    });
 </script>
 </body>
 </html>

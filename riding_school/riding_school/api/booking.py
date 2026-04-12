@@ -90,7 +90,7 @@ def get_available_slots(start, end):
             "booking_name": booking_name
         })
 
-    return result
+    return sorted(result, key=lambda x: (str(x["slot_date"]), str(x["start_time"])), reverse=True)
 
 
 @frappe.whitelist()
@@ -247,3 +247,98 @@ def cancel_booking(booking_name):
         msg = "Buchung erfolgreich storniert."
 
     return {"success": True, "message": msg, "is_late": is_late}
+
+
+@frappe.whitelist()
+def get_rider_diary():
+    """Gibt alle vergangenen Stunden des Reitschülers zurück"""
+    if frappe.session.user == "Guest":
+        return []
+
+    rider = frappe.db.get_value("RS Rider", {"user": frappe.session.user}, "name")
+    if not rider:
+        return []
+
+    bookings = frappe.get_all(
+        "RS Booking",
+        filters={"rider": rider, "status": "Completed"},
+        fields=["name", "lesson_slot", "billing_type"],
+        order_by="creation desc",
+        limit=100
+    )
+
+    # Nach Slot-Datum sortieren (neueste zuerst)
+    result_unsorted = []
+
+    result = []
+    for b in bookings:
+        slot = frappe.get_doc("RS Lesson Slot", b.lesson_slot)
+        instructor_name = frappe.db.get_value("RS Instructor", slot.instructor, "full_name") if slot.instructor else None
+        horse_name = frappe.db.get_value("RS Horse", slot.horse, "horse_name") if slot.horse else None
+        facility_name = frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None
+
+        # Rider Log laden
+        log = frappe.db.get_value(
+            "RS Rider Log",
+            {"rider": rider, "lesson_slot": b.lesson_slot},
+            ["name", "lesson_rating", "instructor_rating", "rider_comment"],
+            as_dict=True
+        )
+
+        result.append({
+            "booking": b.name,
+            "slot": slot.name,
+            "slot_date": str(slot.slot_date),
+            "start_time": str(slot.start_time),
+            "end_time": str(slot.end_time),
+            "instructor_name": instructor_name,
+            "horse_name": horse_name,
+            "facility_name": facility_name,
+            "instructor_comment": slot.logbook_entry or "",
+            "log_name": log.name if log else None,
+            "lesson_rating": round((log.lesson_rating or 0) * 5) if log else 0,
+            "instructor_rating": round((log.instructor_rating or 0) * 5) if log else 0,
+            "rider_comment": log.rider_comment if log else ""
+        })
+
+    return sorted(result, key=lambda x: (x["slot_date"], x["start_time"]))
+
+
+@frappe.whitelist()
+def save_rider_log(lesson_slot, lesson_rating, instructor_rating, rider_comment):
+    """Speichert oder aktualisiert einen Tagebucheintrag"""
+    if frappe.session.user == "Guest":
+        return {"success": False}
+
+    rider = frappe.db.get_value("RS Rider", {"user": frappe.session.user}, "name")
+    if not rider:
+        return {"success": False, "error": "Kein Reitschüler-Profil"}
+
+    slot = frappe.get_doc("RS Lesson Slot", lesson_slot)
+
+    existing = frappe.db.get_value(
+        "RS Rider Log",
+        {"rider": rider, "lesson_slot": lesson_slot},
+        "name"
+    )
+
+    if existing:
+        log = frappe.get_doc("RS Rider Log", existing)
+        log.lesson_rating = int(lesson_rating) / 5
+        log.instructor_rating = int(instructor_rating) / 5
+        log.rider_comment = rider_comment
+        log.save(ignore_permissions=True)
+    else:
+        log = frappe.get_doc({
+            "doctype": "RS Rider Log",
+            "rider": rider,
+            "lesson_slot": lesson_slot,
+            "log_date": slot.slot_date,
+            "lesson_rating": int(lesson_rating) / 5,
+            "instructor_rating": int(instructor_rating) / 5,
+            "rider_comment": rider_comment
+        })
+        log.insert(ignore_permissions=True)
+
+    frappe.db.commit()
+    return {"success": True}
