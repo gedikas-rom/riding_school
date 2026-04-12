@@ -1499,10 +1499,12 @@
     .then(() => {
       loadSlots();
       loadTimeCards();
+      loadDiary(); // Diary im Hintergrund laden für Kalender-Klicks
     })
     .catch(() => {
       loadSlots();
       loadTimeCards();
+      loadDiary();
     });
 </script>
 </body>
