@@ -1,0 +1,70 @@
+{
+  "name": "RS Horse Note",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "fields": [
+    {
+      "fieldname": "horse",
+      "fieldtype": "Link",
+      "label": "Pferd",
+      "options": "RS Horse",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "note_date",
+      "fieldtype": "Date",
+      "label": "Datum",
+      "reqd": 1,
+      "in_list_view": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "note_time",
+      "fieldtype": "Time",
+      "label": "Uhrzeit"
+    },
+    {
+      "fieldname": "duration_minutes",
+      "fieldtype": "Int",
+      "label": "Dauer (Minuten)"
+    },
+    {
+      "fieldname": "category",
+      "fieldtype": "Select",
+      "label": "Kategorie",
+      "options": "Schmied\nTierarzt\nSonstiges",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Text",
+      "label": "Notiz",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Riding School Backoffice",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "Riding School Instructor",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    }
+  ],
+  "track_changes": 1,
+  "title_field": "category"
+}

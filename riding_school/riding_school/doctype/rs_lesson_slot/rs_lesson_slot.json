@@ -31,13 +31,6 @@
       "in_list_view": 1
     },
     {
-      "fieldname": "horse",
-      "fieldtype": "Link",
-      "label": "Pferd",
-      "options": "RS Horse",
-      "in_list_view": 1
-    },
-    {
       "fieldname": "facility",
       "fieldtype": "Link",
       "label": "Reitplatz",
@@ -52,25 +45,24 @@
       "fieldname": "slot_type",
       "fieldtype": "Select",
       "label": "Typ",
-      "options": "Individual\nGroup\nCourse\nEvent",
-      "default": "Individual",
-      "reqd": 1
+      "options": "Einzel\nGruppe"
     },
     {
       "fieldname": "skill_level",
       "fieldtype": "Select",
       "label": "Skill Level",
-      "options": "\nBeginner\nIntermediate\nAdvanced\nCompetition"
+      "options": "Beginner\nIntermediate\nAdvanced\nCompetition"
     },
     {
-      "fieldname": "max_riders",
+      "fieldname": "max_participants",
       "fieldtype": "Int",
-      "label": "Max. Reiter",
+      "label": "Teilnehmer",
       "default": "1"
     },
     {
       "fieldname": "cb_details",
-      "fieldtype": "Column Break"
+      "fieldtype": "Column Break",
+      "label": ""
     },
     {
       "fieldname": "status",
@@ -78,9 +70,18 @@
       "label": "Status",
       "options": "Open\nPlanned\nReleased\nBooked\nCompleted\nCancelled",
       "default": "Open",
-      "reqd": 1,
-      "in_list_view": 1,
       "read_only": 1
+    },
+    {
+      "fieldname": "sb_participants",
+      "fieldtype": "Section Break",
+      "label": "Teilnehmer"
+    },
+    {
+      "fieldname": "participants",
+      "fieldtype": "Table",
+      "label": "Teilnehmer",
+      "options": "RS Slot Participant"
     },
     {
       "fieldname": "sb_logbook",

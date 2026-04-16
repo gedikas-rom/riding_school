@@ -49,6 +49,8 @@ def get_instructor_slots(date):
             "horse_name": frappe.db.get_value("RS Horse", slot.horse, "horse_name") if slot.horse else None,
             "facility_name": frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None,
             "rider_name": rider_name,
+            "rider_id": booking.rider if booking else None,
+            "horse_id": slot.horse,
             "logbook_entry": slot.logbook_entry or ""
         })
 
@@ -77,4 +79,195 @@ def save_logbook_entry(slot_name, entry):
     slot.save(ignore_permissions=True)
     frappe.db.commit()
 
+    return {"success": True}
+
+
+@frappe.whitelist()
+def get_rider_history(rider_name):
+    """Gibt die Historie eines Reitschülers zurück"""
+    if frappe.session.user == "Guest":
+        frappe.throw("Nicht eingeloggt")
+
+    # Nur Reitlehrer und Backoffice dürfen das sehen
+    roles = frappe.get_roles(frappe.session.user)
+    if not any(r in roles for r in ["Riding School Instructor", "Riding School Backoffice", "System Manager"]):
+        frappe.throw("Keine Berechtigung")
+
+    rider = frappe.get_doc("RS Rider", rider_name)
+
+    # Vergangene Buchungen
+    bookings = frappe.get_all(
+        "RS Booking",
+        filters={"rider": rider_name, "status": ["in", ["Completed", "Reserved", "Confirmed"]]},
+        fields=["name", "lesson_slot", "billing_type"],
+        order_by="creation desc",
+        limit=20
+    )
+
+    history = []
+    for b in bookings:
+        slot = frappe.get_doc("RS Lesson Slot", b.lesson_slot)
+        if slot.status not in ["Completed", "Booked"]:
+            continue
+
+        instructor_name = frappe.db.get_value("RS Instructor", slot.instructor, "full_name") if slot.instructor else None
+        horse_name = frappe.db.get_value("RS Horse", slot.horse, "horse_name") if slot.horse else None
+
+        # Rider Log
+        log = frappe.db.get_value(
+            "RS Rider Log",
+            {"rider": rider_name, "lesson_slot": slot.name},
+            ["lesson_rating", "instructor_rating", "rider_comment"],
+            as_dict=True
+        )
+
+        history.append({
+            "slot_date": str(slot.slot_date),
+            "start_time": str(slot.start_time),
+            "end_time": str(slot.end_time),
+            "status": slot.status,
+            "instructor_name": instructor_name,
+            "horse_name": horse_name,
+            "logbook_entry": slot.logbook_entry or "",
+            "lesson_rating": round((log.lesson_rating or 0) * 5) if log else 0,
+            "rider_comment": log.rider_comment if log else ""
+        })
+
+    return {
+        "rider": {
+            "name": rider.name,
+            "full_name": rider.full_name,
+            "skill_level": rider.skill_level,
+            "weight_kg": rider.weight_kg,
+            "goal": rider.goal,
+            "lesson_type": rider.lesson_type
+        },
+        "history": sorted(history, key=lambda x: (x["slot_date"], x["start_time"]), reverse=True)
+    }
+
+
+@frappe.whitelist()
+def get_horse_history(horse_name):
+    """Gibt die Historie eines Pferdes zurück"""
+    if frappe.session.user == "Guest":
+        frappe.throw("Nicht eingeloggt")
+
+    roles = frappe.get_roles(frappe.session.user)
+    if not any(r in roles for r in ["Riding School Instructor", "Riding School Backoffice", "System Manager"]):
+        frappe.throw("Keine Berechtigung")
+
+    horse = frappe.get_doc("RS Horse", horse_name)
+
+    # Letzte Einsätze
+    slots = frappe.get_all(
+        "RS Lesson Slot",
+        filters={
+            "horse": horse_name,
+            "status": ["in", ["Completed", "Booked"]],
+        },
+        fields=["name", "slot_date", "start_time", "end_time",
+                "status", "instructor", "facility"],
+        order_by="slot_date desc, start_time desc",
+        limit=20
+    )
+
+    # Stunden heute und diese Woche
+    from datetime import date, timedelta
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+
+    hours_today = frappe.db.sql("""
+        SELECT SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600)
+        FROM `tabRS Lesson Slot`
+        WHERE horse = %s AND slot_date = %s AND status != 'Cancelled'
+    """, (horse_name, today))[0][0] or 0
+
+    hours_week = frappe.db.sql("""
+        SELECT SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600)
+        FROM `tabRS Lesson Slot`
+        WHERE horse = %s AND slot_date >= %s AND status != 'Cancelled'
+    """, (horse_name, week_start))[0][0] or 0
+
+    history = []
+    for s in slots:
+        instructor_name = frappe.db.get_value("RS Instructor", s.instructor, "full_name") if s.instructor else None
+        facility_name = frappe.db.get_value("RS Facility", s.facility, "facility_name") if s.facility else None
+
+        booking = frappe.db.get_value(
+            "RS Booking",
+            {"lesson_slot": s.name, "status": ["!=", "Cancelled"]},
+            ["rider"],
+            as_dict=True
+        )
+        rider_name = frappe.db.get_value("RS Rider", booking.rider, "full_name") if booking else None
+
+        history.append({
+            "slot_date": str(s.slot_date),
+            "start_time": str(s.start_time),
+            "end_time": str(s.end_time),
+            "status": s.status,
+            "instructor_name": instructor_name,
+            "facility_name": facility_name,
+            "rider_name": rider_name
+        })
+
+    return {
+        "horse": {
+            "name": horse.name,
+            "horse_name": horse.horse_name,
+            "status": horse.status,
+            "max_weight_kg": horse.max_weight_kg,
+            "max_hours_per_day": horse.max_hours_per_day,
+            "rest_minutes": horse.rest_minutes,
+            "health_notes": horse.health_notes,
+            "hours_today": round(float(hours_today), 1),
+            "hours_week": round(float(hours_week), 1)
+        },
+        "history": history
+    }
+
+
+@frappe.whitelist()
+def get_horse_notes(horse_name):
+    """Gibt alle Notizen eines Pferdes zurück"""
+    notes = frappe.get_all(
+        "RS Horse Note",
+        filters={"horse": horse_name},
+        fields=["name", "note_date", "category", "note"],
+        order_by="note_date desc"
+    )
+    return notes
+
+
+@frappe.whitelist()
+def save_horse_note(horse_name, category, note, note_date=None):
+    """Speichert eine neue Notiz für ein Pferd"""
+    if frappe.session.user == "Guest":
+        frappe.throw("Nicht eingeloggt")
+
+    roles = frappe.get_roles(frappe.session.user)
+    if not any(r in roles for r in ["Riding School Instructor", "Riding School Backoffice", "System Manager"]):
+        frappe.throw("Keine Berechtigung")
+
+    from datetime import date
+    doc = frappe.get_doc({
+        "doctype": "RS Horse Note",
+        "horse": horse_name,
+        "note_date": note_date or str(date.today()),
+        "category": category,
+        "note": note
+    })
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "name": doc.name}
+
+
+@frappe.whitelist()
+def delete_horse_note(note_name):
+    """Löscht eine Notiz"""
+    if frappe.session.user == "Guest":
+        frappe.throw("Nicht eingeloggt")
+
+    frappe.delete_doc("RS Horse Note", note_name, ignore_permissions=True)
+    frappe.db.commit()
     return {"success": True}

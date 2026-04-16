@@ -1,0 +1,12 @@
+{
+  "name": "RS Slot Participant",
+  "doctype": "DocType",
+  "module": "Riding School",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "rider", "fieldtype": "Link", "label": "Reitschüler", "options": "RS Rider", "in_list_view": 1},
+    {"fieldname": "horse", "fieldtype": "Link", "label": "Pferd", "options": "RS Horse", "in_list_view": 1},
+    {"fieldname": "confirmed", "fieldtype": "Check", "label": "Bestätigt", "in_list_view": 1}
+  ],
+  "permissions": []
+}
