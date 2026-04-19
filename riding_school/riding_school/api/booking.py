@@ -336,9 +336,8 @@ def get_rider_diary():
 
     bookings = frappe.get_all(
         "RS Booking",
-        filters={"rider": rider, "status": "Completed"},
+        filters={"rider": rider, "status": ["in", ["Completed", "Reserved"]]},
         fields=["name", "lesson_slot", "billing_type"],
-        order_by="creation desc",
         limit=100
     )
 
@@ -348,6 +347,9 @@ def get_rider_diary():
     result = []
     for b in bookings:
         slot = frappe.get_doc("RS Lesson Slot", b.lesson_slot)
+        # Nur abgeschlossene oder gebuchte Slots anzeigen
+        if slot.status not in ["Completed", "Booked", "Released"]:
+            continue
         instructor_name = frappe.db.get_value("RS Instructor", slot.instructor, "full_name") if slot.instructor else None
         # Pferde aus Teilnehmern holen
         participant_horses = frappe.db.get_all(
@@ -370,6 +372,16 @@ def get_rider_diary():
             as_dict=True
         )
 
+        # Logbucheintrag: bei Gruppenslots aus Teilnehmer-Eintrag
+        if len(slot.participants) > 1:
+            instructor_comment = frappe.db.get_value(
+                "RS Slot Participant",
+                {"parent": slot.name, "rider": rider},
+                "logbook_entry"
+            ) or ""
+        else:
+            instructor_comment = slot.logbook_entry or ""
+
         result.append({
             "booking": b.name,
             "slot": slot.name,
@@ -379,7 +391,7 @@ def get_rider_diary():
             "instructor_name": instructor_name,
             "horse_name": horse_name,
             "facility_name": facility_name,
-            "instructor_comment": slot.logbook_entry or "",
+            "instructor_comment": instructor_comment,
             "log_name": log.name if log else None,
             "lesson_rating": round((log.lesson_rating or 0) * 5) if log else 0,
             "instructor_rating": round((log.instructor_rating or 0) * 5) if log else 0,

@@ -228,7 +228,7 @@ def set_slot_status(slot_name, status):
     allowed_transitions = {
         'Open': ['Planned', 'Cancelled'],
         'Planned': ['Open', 'Released', 'Cancelled'],
-        'Released': ['Planned', 'Open', 'Booked', 'Cancelled'],
+        'Released': ['Planned', 'Open', 'Booked', 'Completed', 'Cancelled'],
         'Booked': ['Completed', 'Cancelled'],
     }
 
@@ -247,7 +247,7 @@ def set_slot_status(slot_name, status):
     if status == "Completed":
         booking = frappe.db.get_value(
             "RS Booking",
-            {"lesson_slot": slot_name, "status": ["!=", "Cancelled"], "billing_type": "Time Card"},
+            {"lesson_slot": slot_name, "status": ["in", ["Reserved", "Confirmed"]], "billing_type": "Time Card"},
             ["name", "time_card"],
             as_dict=True
         )

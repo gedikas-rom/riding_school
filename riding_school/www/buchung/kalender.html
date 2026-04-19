@@ -395,12 +395,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    background: var(--cream);
+    background: white;
     border-radius: 10px;
     margin-bottom: 0.75rem;
     border: 1px solid var(--sand);
     flex-wrap: wrap;
     gap: 0.75rem;
+    margin-left: 0 !important;
   }
 
   .slot-item:last-child { margin-bottom: 0; }
@@ -426,9 +427,12 @@
     border-radius: 20px;
   }
 
+  .status-open { background: rgba(245,166,35,0.1); color: #d4820a; }
+  .status-planned { background: rgba(174,214,241,0.3); color: #2e86c1; }
   .status-released { background: rgba(45,106,79,0.1); color: var(--success); }
   .status-booked { background: rgba(107,63,32,0.1); color: var(--earth-mid); }
   .status-completed { background: rgba(100,100,100,0.1); color: #888; }
+  .status-cancelled { background: rgba(139,26,26,0.1); color: var(--accent); }
 
   .slot-item-actions { display: flex; gap: 0.5rem; }
 
@@ -577,6 +581,13 @@
     height: 10px;
     border-radius: 3px;
   }
+
+  .hist-link {
+    cursor: pointer;
+    color: var(--earth-warm);
+    text-decoration: underline;
+  }
+  .hist-link:hover { color: var(--earth-mid); }
 
   /* Rider History */
   .history-entry {
@@ -1293,7 +1304,23 @@
     .catch(() => showToast('Verbindungsfehler.', 'error'));
   }
 
-  // ===== REITLEHRER =====
+  // ===== TEILNEHMER RENDER =====
+  function renderParticipants(s) {
+    const list = (s.participants && s.participants.length > 0) ? s.participants : [
+      {rider_id: s.rider_id, rider_name: s.rider_name, horse_id: s.horse_id, horse_name: s.horse_name}
+    ];
+    return list.map(function(p) {
+      let h = p.rider_name
+        ? '<span class="hist-link" data-type="rider" data-id="' + (p.rider_id||'') + '">👤 ' + p.rider_name + '</span>'
+        : 'Kein Reitschüler';
+      if (p.horse_name) {
+        h += ' · <span class="hist-link" data-type="horse" data-id="' + (p.horse_id||'') + '">🐴 ' + p.horse_name + '</span>';
+      }
+      return h;
+    }).join('<br>');
+  }
+
+    // ===== REITLEHRER =====
   function changeDay(dir) {
     currentDay = new Date(currentDay);
     currentDay.setDate(currentDay.getDate() + dir);
@@ -1332,13 +1359,15 @@
       'Booked': 'Gebucht', 'Completed': 'Abgeschlossen', 'Cancelled': 'Storniert'
     };
     const statusClass = {
-      'Released': 'status-released', 'Booked': 'status-booked', 'Completed': 'status-completed'
+      'Open': 'status-open', 'Planned': 'status-planned',
+      'Released': 'status-released', 'Booked': 'status-booked',
+      'Completed': 'status-completed', 'Cancelled': 'status-cancelled'
     };
 
     let html = '';
     slots.forEach(s => {
-      const canComplete = s.status === 'Booked';
-      const canLog = s.status !== 'Cancelled';
+      const canComplete = s.status === 'Booked' || (s.status === 'Released' && s.current_participants > 0);
+      const canLog = s.status !== 'Cancelled' && s.status !== 'Open' && s.current_participants > 0;
 
       html += '<div class="slot-item">' +
         '<div class="slot-item-info">' +
@@ -1346,18 +1375,26 @@
         (s.max_participants > 1 ? ' <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.4rem">(' + s.current_participants + '/' + s.max_participants + ' Plätze belegt)</span>' : '') +
         '</div>' +
         '<div class="slot-item-details">' +
-        (s.rider_name ? '👤 <span style="cursor:pointer;color:var(--earth-warm);text-decoration:underline" onclick="openRiderHistory(\'' + s.rider_id + '\')">' + s.rider_name + '</span>' : 'Kein Reitschüler') +
-        (s.horse_name ? ' · 🐴 <span style="cursor:pointer;color:var(--earth-warm);text-decoration:underline" onclick="openHorseHistory(\'' + s.horse_id + '\')">' + s.horse_name + '</span>' : '') +
-        (s.facility_name ? ' · 📍 ' + s.facility_name : '') +
+        (s.facility_name ? '📍 ' + s.facility_name + '<br>' : '') +
+        renderParticipants(s) +
         '</div></div>' +
         '<span class="slot-item-status ' + (statusClass[s.status] || '') + '">' +
         (statusLabels[s.status] || s.status) + '</span>' +
         '<div class="slot-item-actions">';
 
       if (canLog) {
-        html += '<button class="btn-small btn-log" onclick="openLogModal(\'' + s.name + '\', \'' +
-          s.start_time.slice(0,5) + ' - ' + s.end_time.slice(0,5) + '\', \'' +
-          (s.logbook_entry || '') + '\')">Logbuch</button>';
+        if (s.participants && s.participants.length > 1) {
+          s.participants.forEach(function(p) {
+            const firstName = p.rider_name ? p.rider_name.split(' ')[0] : 'Logbuch';
+            html += '<button class="btn-small btn-log" onclick="openLogModal(\'' + s.name + '\', \'' +
+              s.start_time.slice(0,5) + ' - ' + s.end_time.slice(0,5) + '\', \'' +
+              (p.logbook_entry || '') + '\', \'' + (p.rider_id || '') + '\')" title="Logbuch für ' + (p.rider_name || '') + '">📝 ' + firstName + '</button>';
+          });
+        } else {
+          html += '<button class="btn-small btn-log" onclick="openLogModal(\'' + s.name + '\', \'' +
+            s.start_time.slice(0,5) + ' - ' + s.end_time.slice(0,5) + '\', \'' +
+            (s.logbook_entry || '') + '\')">Logbuch</button>';
+        }
       }
       if (canComplete) {
         html += '<button class="btn-small btn-complete" onclick="completeSlot(\'' + s.name + '\')">Abschließen</button>';
@@ -1366,369 +1403,6 @@
       html += '</div></div>';
     });
     container.innerHTML = html;
-  }
-
-  function completeSlot(slotName) {
-    if (!confirm('Stunde als abgeschlossen markieren?')) return;
-    fetch('/api/method/riding_school.riding_school.api.slot_generator.set_slot_status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ slot_name: slotName, status: 'Completed' })
-    })
-    .then(r => r.json())
-    .then(() => {
-      showToast('Stunde abgeschlossen!', 'success');
-      loadInstructorSlots();
-    });
-  }
-
-  // ===== LOGBUCH MODAL =====
-  function openLogModal(slotName, timeStr, existingEntry) {
-    selectedInstructorSlot = slotName;
-    document.getElementById('log-modal-info').innerHTML =
-      '<strong>' + formatDisplayLong(currentDay) + '</strong><br>' + timeStr + ' Uhr';
-    document.getElementById('log-text').value = existingEntry || '';
-    document.getElementById('log-modal').style.display = 'flex';
-  }
-
-  function closeLogModal() {
-    document.getElementById('log-modal').style.display = 'none';
-    selectedInstructorSlot = null;
-  }
-
-  function saveLogEntry() {
-    if (!selectedInstructorSlot) return;
-    const text = document.getElementById('log-text').value;
-    fetch('/api/method/riding_school.riding_school.api.instructor.save_logbook_entry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ slot_name: selectedInstructorSlot, entry: text })
-    })
-    .then(r => r.json())
-    .then(() => {
-      closeLogModal();
-      showToast('Logbuch gespeichert!', 'success');
-      loadInstructorSlots();
-    });
-  }
-
-  // ===== MODAL CLICK OUTSIDE =====
-  ['modal', 'cancel-modal', 'log-modal', 'diary-modal'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('click', function(e) {
-      if (e.target === this) {
-        this.style.display = 'none';
-      }
-    });
-  });
-
-  // ===== TOAST =====
-  function showToast(msg, type) {
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);' +
-      'background:' + (type === 'success' ? '#2D6A4F' : '#8B1A1A') + ';color:white;' +
-      'padding:0.75rem 1.5rem;border-radius:10px;font-family:\'Jost\',sans-serif;' +
-      'font-size:0.9rem;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:300;transition:opacity 0.3s;';
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-  }
-
-  // ===== PFERDE HISTORIE =====
-  const CATEGORY_ICONS = { 'Schmied': '🔨', 'Tierarzt': '⚕️', 'Sonstiges': '📝' };
-  let currentHorseName = null;
-
-  function openHorseHistory(horseName) {
-    currentHorseName = horseName;
-    document.getElementById('horse-history-content').innerHTML =
-      '<div class="empty-state">Wird geladen…</div>';
-    document.getElementById('horse-history-modal').style.display = 'flex';
-
-    fetch('/api/method/riding_school.riding_school.api.instructor.get_horse_history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ horse_name: horseName })
-    })
-    .then(r => r.json())
-    .then(data => {
-      const d = data.message;
-      if (!d) return;
-      const h = d.horse;
-
-      let html = '<div class="rider-info-grid">' +
-        '<div class="rider-info-item"><div class="label">Status</div><div class="value">' + (h.status || '–') + '</div></div>' +
-        '<div class="rider-info-item"><div class="label">Heute</div><div class="value">' + h.hours_today + ' Std</div></div>' +
-        '<div class="rider-info-item"><div class="label">Diese Woche</div><div class="value">' + h.hours_week + ' Std</div></div>' +
-        '<div class="rider-info-item"><div class="label">Max/Tag</div><div class="value">' + (h.max_hours_per_day || '–') + ' Std</div></div>' +
-        '<div class="rider-info-item"><div class="label">Max Gewicht</div><div class="value">' + (h.max_weight_kg ? h.max_weight_kg + ' kg' : '–') + '</div></div>' +
-        '<div class="rider-info-item"><div class="label">Pause</div><div class="value">' + (h.rest_minutes || '–') + ' min</div></div>' +
-        '</div>';
-
-      html += '<div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1rem">' +
-        '<div class="history-log" style="flex:1;border-left-color:var(--accent)" id="horse-health-note">' +
-        (h.health_notes ? h.health_notes : '<span style="color:var(--text-light)">Keine Gesundheitsnotizen</span>') +
-        '</div>' +
-
-        '</div>';
-
-      if (d.history.length === 0) {
-        html += '<div class="empty-state">Keine vergangenen Einsätze.</div>';
-      } else {
-        html += '<h4 style="font-family:Playfair Display,serif;font-weight:400;color:var(--earth-dark);margin-bottom:0.75rem">Einsätze</h4>';
-        d.history.forEach(e => {
-          const date = new Date(e.slot_date + 'T12:00:00');
-          const dateStr = date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-          html += '<div class="history-entry">' +
-            '<div class="history-date">' + dateStr + ' · ' + e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5) + ' Uhr</div>' +
-            '<div class="history-detail">' +
-            (e.rider_name ? '👤 ' + e.rider_name : '') +
-            (e.instructor_name ? ' · 🎓 ' + e.instructor_name : '') +
-            (e.facility_name ? ' · 📍 ' + e.facility_name : '') +
-            '</div></div>';
-        });
-      }
-
-      document.getElementById('horse-history-content').innerHTML = html;
-
-      // Notizen laden
-      loadHorseNotes(horseName);
-    });
-  }
-
-  function loadHorseNotes(horseName) {
-    fetch('/api/method/riding_school.riding_school.api.instructor.get_horse_notes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ horse_name: horseName })
-    })
-    .then(r => r.json())
-    .then(data => {
-      const notes = data.message || [];
-      const container = document.getElementById('horse-history-content');
-      if (!container) return;
-
-      let notesHtml = '<div style="margin-top:1.5rem;padding-top:1.5rem">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">' +
-        '<h4 style="font-family:Playfair Display,serif;font-weight:400;color:var(--earth-dark)">Notizen</h4>' +
-        '<button class="btn-small btn-complete" onclick="showAddNoteForm()">+ Neue Notiz</button>' +
-        '</div>' +
-        '<div id="add-note-form" style="display:none;background:var(--cream);border-radius:10px;padding:1rem;margin-bottom:1rem">' +
-        '<select id="note-category" style="width:100%;padding:0.6rem;border:1.5px solid var(--sand);border-radius:8px;font-family:Jost,sans-serif;margin-bottom:0.75rem;background:white">' +
-        '<option value="Sonstiges">📝 Sonstiges</option>' +
-        '</select>' +
-        '<textarea id="note-text" placeholder="Notiz eingeben…" style="width:100%;padding:0.6rem;border:1.5px solid var(--sand);border-radius:8px;font-family:Jost,sans-serif;min-height:80px;resize:vertical;margin-bottom:0.75rem;background:white"></textarea>' +
-        '<div style="display:flex;gap:0.5rem">' +
-        '<button class="btn-small btn-complete" onclick="submitHorseNote()">Speichern</button>' +
-        '<button class="btn-small btn-log" onclick="hideAddNoteForm()">Abbrechen</button>' +
-        '</div></div>';
-
-      if (notes.length === 0) {
-        notesHtml += '<div class="empty-state" style="padding:1rem">Noch keine Notizen.</div>';
-      } else {
-        notes.forEach(n => {
-          const d = new Date(n.note_date + 'T12:00:00');
-          const dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          const icon = CATEGORY_ICONS[n.category] || '📝';
-          notesHtml += '<div class="history-entry" style="display:flex;gap:0.75rem;align-items:flex-start">' +
-            '<span style="font-size:1.2rem;margin-top:0.1rem">' + icon + '</span>' +
-            '<div style="flex:1">' +
-            '<div class="history-date">' + n.category + ' · ' + dateStr + '</div>' +
-            '<div class="history-detail" style="margin-top:0.3rem;color:var(--text-mid)">' + n.note + '</div>' +
-            '</div>' +
-            (n.category === 'Sonstiges' ? '<button class="btn-small btn-log" style="font-size:0.7rem;padding:0.2rem 0.5rem" ' +
-            'onclick="deleteHorseNote(\'' + n.name + '\')">✕</button>' : '') +
-            '</div>';
-        });
-      }
-
-      
-      container.innerHTML += notesHtml;
-    });
-  }
-
-  function showAddNoteForm() {
-    document.getElementById('add-note-form').style.display = 'block';
-  }
-
-  function hideAddNoteForm() {
-    document.getElementById('add-note-form').style.display = 'none';
-    document.getElementById('note-text').value = '';
-  }
-
-  function submitHorseNote() {
-    const category = document.getElementById('note-category').value;
-    const note = document.getElementById('note-text').value.trim();
-    if (!note) { showToast('Bitte Notiz eingeben', 'error'); return; }
-
-    fetch('/api/method/riding_school.riding_school.api.instructor.save_horse_note', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ horse_name: currentHorseName, category: category, note: note })
-    })
-    .then(r => r.json())
-    .then(() => {
-      showToast('Notiz gespeichert', 'success');
-      openHorseHistory(currentHorseName);
-    });
-  }
-
-  function deleteHorseNote(noteName) {
-    if (!confirm('Notiz löschen?')) return;
-    fetch('/api/method/riding_school.riding_school.api.instructor.delete_horse_note', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ note_name: noteName })
-    })
-    .then(r => r.json())
-    .then(() => {
-      showToast('Notiz gelöscht', 'success');
-      openHorseHistory(currentHorseName);
-    });
-  }
-
-  function closeHorseHistory() {
-    document.getElementById('horse-history-modal').style.display = 'none';
-  }
-
-  document.getElementById('horse-history-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeHorseHistory();
-  });
-
-  // ===== REITSCHÜLER HISTORIE =====
-  function openRiderHistory(riderName) {
-    document.getElementById('rider-history-content').innerHTML =
-      '<div class="empty-state">Wird geladen…</div>';
-    document.getElementById('rider-history-modal').style.display = 'flex';
-
-    fetch('/api/method/riding_school.riding_school.api.instructor.get_rider_history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ rider_name: riderName })
-    })
-    .then(r => r.json())
-    .then(data => {
-      const d = data.message;
-      if (!d) return;
-
-      const r = d.rider;
-      let html = '<div class="rider-info-grid">' +
-        '<div class="rider-info-item"><div class="label">Level</div><div class="value">' + (r.skill_level || '–') + '</div></div>' +
-        '<div class="rider-info-item"><div class="label">Ziel</div><div class="value">' + (r.goal || '–') + '</div></div>' +
-        '<div class="rider-info-item"><div class="label">Gewicht</div><div class="value">' + (r.weight_kg ? r.weight_kg + ' kg' : '–') + '</div></div>' +
-        '</div>';
-
-      if (d.history.length === 0) {
-        html += '<div class="empty-state">Keine vergangenen Stunden.</div>';
-      } else {
-        d.history.forEach(h => {
-          const date = new Date(h.slot_date + 'T12:00:00');
-          const dateStr = date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-
-          html += '<div class="history-entry">' +
-            '<div class="history-date">' + dateStr + ' · ' + h.start_time.slice(0,5) + ' – ' + h.end_time.slice(0,5) + ' Uhr</div>' +
-            '<div class="history-detail">' +
-            (h.instructor_name ? '👤 ' + h.instructor_name : '') +
-            (h.horse_name ? ' · 🐴 ' + h.horse_name : '') +
-            '</div>';
-
-          if (h.logbook_entry) {
-            html += '<div class="history-log">📝 ' + h.logbook_entry + '</div>';
-          }
-          if (h.rider_comment) {
-            html += '<div class="history-log" style="border-left-color:var(--earth-light)">💬 ' + h.rider_comment + '</div>';
-          }
-          if (h.lesson_rating) {
-            html += '<div style="margin-top:0.3rem;font-size:0.8rem;color:var(--earth-warm)">' +
-              '★'.repeat(h.lesson_rating) + '☆'.repeat(5 - h.lesson_rating) + '</div>';
-          }
-          html += '</div>';
-        });
-      }
-
-      document.getElementById('rider-history-content').innerHTML = html;
-    });
-  }
-
-  function closeRiderHistory() {
-    document.getElementById('rider-history-modal').style.display = 'none';
-  }
-
-  document.getElementById('rider-history-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeRiderHistory();
-  });
-
-  // ===== TAGEBUCH =====
-  let currentDiarySlot = null;
-  let lessonRating = 0;
-  let instructorRating = 0;
-
-  function loadDiary() {
-    fetch('/api/method/riding_school.riding_school.api.booking.get_rider_diary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
-      body: JSON.stringify({})
-    })
-    .then(r => r.json())
-    .then(data => renderDiary(data.message || []));
-  }
-
-  function renderDiary(entries) {
-    diaryEntries = entries;
-    const container = document.getElementById('diary-container');
-    if (!container) return;
-    if (entries.length === 0) {
-      container.innerHTML = '<div class="empty-state">Noch keine abgeschlossenen Stunden.</div>';
-      return;
-    }
-
-    let html = '';
-    entries.forEach(e => {
-      const d = new Date(e.slot_date + 'T12:00:00');
-      const dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-
-      html += '<div class="diary-entry">' +
-        '<div class="diary-entry-header">' +
-        '<div>' +
-        '<div class="diary-date">' + dateStr + '</div>' +
-        '<div class="diary-meta">' +
-        e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5) + ' Uhr' +
-        (e.instructor_name ? ' · ' + e.instructor_name : '') +
-        (e.horse_name ? ' · ' + e.horse_name : '') +
-        '</div></div>' +
-        '<button class="btn-edit-log" onclick="openDiaryModalById(\'' + e.slot + '\')">✏️ Bearbeiten</button>' +
-        '</div>';
-
-      if (e.lesson_rating || e.instructor_rating) {
-        html += '<div class="ratings-row">';
-        if (e.lesson_rating) {
-          html += '<div class="rating-item"><div class="rating-label">Stunde</div><div class="stars">' +
-            renderStarsStatic(e.lesson_rating) + '</div></div>';
-        }
-        if (e.instructor_rating) {
-          html += '<div class="rating-item"><div class="rating-label">Reitlehrer</div><div class="stars">' +
-            renderStarsStatic(e.instructor_rating) + '</div></div>';
-        }
-        html += '</div>';
-      }
-
-      if (e.rider_comment) {
-        html += '<div class="diary-comment">' + e.rider_comment + '</div>';
-      }
-      if (e.instructor_comment) {
-        html += '<div class="instructor-comment">Reitlehrer: ' + e.instructor_comment + '</div>';
-      }
-
-      html += '</div>';
-    });
-    container.innerHTML = html;
-  }
-
-  function renderStarsStatic(count) {
-    let html = '';
-    for (let i = 1; i <= 5; i++) {
-      html += '<span class="star ' + (i <= count ? 'filled' : '') + '">★</span>';
-    }
-    return html;
   }
 
   function setRating(type, value) {
@@ -1795,6 +1469,306 @@
       showToast('Tagebucheintrag gespeichert!', 'success');
       loadDiary();
     });
+  }
+
+  // ===== REITLEHRER FUNKTIONEN =====
+  function completeSlot(slotName) {
+    if (!confirm('Stunde als abgeschlossen markieren?')) return;
+    fetch('/api/method/riding_school.riding_school.api.slot_generator.set_slot_status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ slot_name: slotName, status: 'Completed' })
+    }).then(r => r.json()).then(() => {
+      showToast('Stunde abgeschlossen!', 'success');
+      loadInstructorSlots();
+    });
+  }
+
+  let currentLogRiderId = null;
+
+  function openLogModal(slotName, timeStr, existingEntry, riderId) {
+    selectedInstructorSlot = slotName;
+    currentLogRiderId = riderId || null;
+    document.getElementById('log-modal-info').innerHTML =
+      '<strong>' + formatDisplayLong(currentDay) + '</strong><br>' + timeStr + ' Uhr';
+    document.getElementById('log-text').value = existingEntry || '';
+    document.getElementById('log-modal').style.display = 'flex';
+  }
+
+  function closeLogModal() {
+    document.getElementById('log-modal').style.display = 'none';
+    selectedInstructorSlot = null;
+  }
+
+  function saveLogEntry() {
+    if (!selectedInstructorSlot) return;
+    const text = document.getElementById('log-text').value;
+    fetch('/api/method/riding_school.riding_school.api.instructor.save_logbook_entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ slot_name: selectedInstructorSlot, entry: text, rider_id: currentLogRiderId })
+    }).then(r => r.json()).then(() => {
+      closeLogModal();
+      showToast('Logbuch gespeichert!', 'success');
+      loadInstructorSlots();
+    });
+  }
+
+  // ===== TAGEBUCH =====
+
+  function loadDiary() {
+    fetch('/api/method/riding_school.riding_school.api.booking.get_rider_diary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({})
+    }).then(r => r.json()).then(data => renderDiary(data.message || []));
+  }
+
+  function renderDiary(entries) {
+    diaryEntries = entries;
+    const container = document.getElementById('diary-container');
+    if (!container) return;
+    if (entries.length === 0) {
+      container.innerHTML = '<div class="empty-state">Noch keine abgeschlossenen Stunden.</div>';
+      return;
+    }
+    let html = '';
+    entries.forEach(e => {
+      const d = new Date(e.slot_date + 'T12:00:00');
+      const dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+      html += '<div class="diary-entry">' +
+        '<div class="diary-entry-header">' +
+        '<div><div class="diary-date">' + dateStr + '</div>' +
+        '<div class="diary-meta">' + e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5) + ' Uhr' +
+        (e.instructor_name ? ' · ' + e.instructor_name : '') +
+        (e.horse_name ? ' · ' + e.horse_name : '') + '</div></div>' +
+        '<button class="btn-edit-log" onclick="openDiaryModalById(\'' + e.slot + '\')">✏️ Bearbeiten</button>' +
+        '</div>';
+      if (e.lesson_rating || e.instructor_rating) {
+        html += '<div class="ratings-row">';
+        if (e.lesson_rating) html += '<div class="rating-item"><div class="rating-label">Stunde</div><div class="stars">' + renderStarsStatic(e.lesson_rating) + '</div></div>';
+        if (e.instructor_rating) html += '<div class="rating-item"><div class="rating-label">Reitlehrer</div><div class="stars">' + renderStarsStatic(e.instructor_rating) + '</div></div>';
+        html += '</div>';
+      }
+      if (e.rider_comment) html += '<div class="diary-comment">' + e.rider_comment + '</div>';
+      if (e.instructor_comment) html += '<div class="instructor-comment">Reitlehrer: ' + e.instructor_comment + '</div>';
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function renderStarsStatic(count) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) html += '<span class="star ' + (i <= count ? 'filled' : '') + '">★</span>';
+    return html;
+  }
+
+  function openDiaryModalById(slotName) {
+    const e = diaryEntries.find(x => x.slot === slotName);
+    if (!e) return;
+    const d = new Date(e.slot_date + 'T12:00:00');
+    const dateStr = d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    const timeStr = e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5);
+    openDiaryModal(slotName, dateStr, timeStr, e.lesson_rating||0, e.instructor_rating||0, e.rider_comment||'');
+  }
+
+  let currentDiarySlot = null;
+  let lessonRating = 0;
+  let instructorRating = 0;
+
+  function openDiaryModal(slotName, dateStr, timeStr, lRating, iRating, comment) {
+    currentDiarySlot = slotName;
+    lessonRating = lRating;
+    instructorRating = iRating;
+    document.getElementById('diary-modal-info').innerHTML = '<strong>' + dateStr + '</strong><br>' + timeStr + ' Uhr';
+    document.getElementById('diary-text').value = comment || '';
+    updateStarDisplay('lesson-stars', lRating);
+    updateStarDisplay('instructor-stars', iRating);
+    document.getElementById('diary-modal').style.display = 'flex';
+  }
+
+  function closeDiaryModal() {
+    document.getElementById('diary-modal').style.display = 'none';
+    currentDiarySlot = null;
+  }
+
+  function setRating(type, value) {
+    if (type === 'lesson') { lessonRating = value; updateStarDisplay('lesson-stars', value); }
+    else { instructorRating = value; updateStarDisplay('instructor-stars', value); }
+  }
+
+  function updateStarDisplay(containerId, value) {
+    document.querySelectorAll('#' + containerId + ' .star').forEach((s, i) => s.classList.toggle('filled', i < value));
+  }
+
+  function saveDiaryEntry() {
+    if (!currentDiarySlot) return;
+    const comment = document.getElementById('diary-text').value;
+    fetch('/api/method/riding_school.riding_school.api.booking.save_rider_log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ lesson_slot: currentDiarySlot, lesson_rating: lessonRating, instructor_rating: instructorRating, rider_comment: comment })
+    }).then(r => r.json()).then(() => {
+      closeDiaryModal();
+      showToast('Tagebucheintrag gespeichert!', 'success');
+      loadDiary();
+    });
+  }
+
+  // ===== REITSCHÜLER HISTORIE =====
+  function openRiderHistory(riderName) {
+    document.getElementById('rider-history-content').innerHTML = '<div class="empty-state">Wird geladen…</div>';
+    document.getElementById('rider-history-modal').style.display = 'flex';
+    fetch('/api/method/riding_school.riding_school.api.instructor.get_rider_history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ rider_name: riderName })
+    }).then(r => r.json()).then(data => {
+      const d = data.message;
+      if (!d) return;
+      const r = d.rider;
+      let html = '<div class="rider-info-grid">' +
+        '<div class="rider-info-item"><div class="label">Level</div><div class="value">' + (r.skill_level||'–') + '</div></div>' +
+        '<div class="rider-info-item"><div class="label">Ziel</div><div class="value">' + (r.goal||'–') + '</div></div>' +
+        '<div class="rider-info-item"><div class="label">Gewicht</div><div class="value">' + (r.weight_kg ? r.weight_kg+' kg' : '–') + '</div></div>' +
+        '</div>';
+      if (d.history.length === 0) {
+        html += '<div class="empty-state">Keine vergangenen Stunden.</div>';
+      } else {
+        d.history.forEach(h => {
+          const date = new Date(h.slot_date + 'T12:00:00');
+          const dateStr = date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+          html += '<div class="history-entry"><div class="history-date">' + dateStr + ' · ' + h.start_time.slice(0,5) + ' – ' + h.end_time.slice(0,5) + ' Uhr</div>' +
+            '<div class="history-detail">' + (h.instructor_name ? '👤 ' + h.instructor_name : '') + (h.horse_name ? ' · 🐴 ' + h.horse_name : '') + '</div>';
+          if (h.logbook_entry) html += '<div class="history-log">📝 ' + h.logbook_entry + '</div>';
+          if (h.rider_comment) html += '<div class="history-log" style="border-left-color:var(--earth-light)">💬 ' + h.rider_comment + '</div>';
+          if (h.lesson_rating) html += '<div style="margin-top:0.3rem;font-size:0.8rem;color:var(--earth-warm)">' + '★'.repeat(h.lesson_rating) + '☆'.repeat(5-h.lesson_rating) + '</div>';
+          html += '</div>';
+        });
+      }
+      document.getElementById('rider-history-content').innerHTML = html;
+    });
+  }
+
+  function closeRiderHistory() { document.getElementById('rider-history-modal').style.display = 'none'; }
+
+  // ===== PFERDE HISTORIE =====
+  let currentHorseName = null;
+
+  function openHorseHistory(horseName) {
+    currentHorseName = horseName;
+    document.getElementById('horse-history-content').innerHTML = '<div class="empty-state">Wird geladen…</div>';
+    document.getElementById('horse-history-modal').style.display = 'flex';
+    fetch('/api/method/riding_school.riding_school.api.instructor.get_horse_history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ horse_name: horseName })
+    }).then(r => r.json()).then(data => {
+      const d = data.message;
+      if (!d) return;
+      const h = d.horse;
+      let html = '<div class="rider-info-grid">' +
+        '<div class="rider-info-item"><div class="label">Status</div><div class="value">' + (h.status||'–') + '</div></div>' +
+        '<div class="rider-info-item"><div class="label">Heute</div><div class="value">' + h.hours_today + ' Std</div></div>' +
+        '<div class="rider-info-item"><div class="label">Diese Woche</div><div class="value">' + h.hours_week + ' Std</div></div>' +
+        '<div class="rider-info-item"><div class="label">Max/Tag</div><div class="value">' + (h.max_hours_per_day||'–') + ' Std</div></div>' +
+        '<div class="rider-info-item"><div class="label">Max Gewicht</div><div class="value">' + (h.max_weight_kg ? h.max_weight_kg+' kg' : '–') + '</div></div>' +
+        '<div class="rider-info-item"><div class="label">Pause</div><div class="value">' + (h.rest_minutes||'–') + ' min</div></div>' +
+        '</div>';
+      if (h.health_notes) html += '<div class="history-log" style="margin-bottom:1rem;border-left-color:var(--accent)">' + h.health_notes + '</div>';
+      if (d.history.length === 0) {
+        html += '<div class="empty-state">Keine vergangenen Einsätze.</div>';
+      } else {
+        html += '<h4 style="font-family:Playfair Display,serif;font-weight:400;color:var(--earth-dark);margin-bottom:0.75rem">Einsätze</h4>';
+        d.history.forEach(e => {
+          const date = new Date(e.slot_date + 'T12:00:00');
+          const dateStr = date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+          html += '<div class="history-entry"><div class="history-date">' + dateStr + ' · ' + e.start_time.slice(0,5) + ' – ' + e.end_time.slice(0,5) + ' Uhr</div>' +
+            '<div class="history-detail">' + (e.rider_name ? '👤 ' + e.rider_name : '') + (e.instructor_name ? ' · 🎓 ' + e.instructor_name : '') + (e.facility_name ? ' · 📍 ' + e.facility_name : '') + '</div></div>';
+        });
+      }
+      document.getElementById('horse-history-content').innerHTML = html;
+      loadHorseNotes(horseName);
+    });
+  }
+
+  function closeHorseHistory() { document.getElementById('horse-history-modal').style.display = 'none'; }
+
+  function loadHorseNotes(horseName) {
+    fetch('/api/method/riding_school.riding_school.api.instructor.get_horse_notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ horse_name: horseName })
+    }).then(r => r.json()).then(data => {
+      const notes = data.message || [];
+      const container = document.getElementById('horse-history-content');
+      if (!container) return;
+      const ICONS = { 'Schmied': '🔨', 'Tierarzt': '⚕️', 'Sonstiges': '📝' };
+      let notesHtml = '<div style="margin-top:1.5rem;padding-top:1.5rem">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">' +
+        '<h4 style="font-family:Playfair Display,serif;font-weight:400;color:var(--earth-dark)">Notizen</h4>' +
+        '<button class="btn-small btn-complete" onclick="showAddNoteForm()">+ Neue Notiz</button></div>' +
+        '<div id="add-note-form" style="display:none;background:var(--cream);border-radius:10px;padding:1rem;margin-bottom:1rem">' +
+        '<select id="note-category" style="width:100%;padding:0.6rem;border:1.5px solid var(--sand);border-radius:8px;font-family:Jost,sans-serif;margin-bottom:0.75rem;background:white">' +
+        '<option value="Sonstiges">📝 Sonstiges</option></select>' +
+        '<textarea id="note-text" placeholder="Notiz eingeben…" style="width:100%;padding:0.6rem;border:1.5px solid var(--sand);border-radius:8px;font-family:Jost,sans-serif;min-height:80px;resize:vertical;margin-bottom:0.75rem;background:white"></textarea>' +
+        '<div style="display:flex;gap:0.5rem"><button class="btn-small btn-complete" onclick="submitHorseNote()">Speichern</button>' +
+        '<button class="btn-small btn-log" onclick="hideAddNoteForm()">Abbrechen</button></div></div>';
+      if (notes.length === 0) {
+        notesHtml += '<div class="empty-state" style="padding:1rem">Noch keine Notizen.</div>';
+      } else {
+        notes.forEach(n => {
+          const d = new Date(n.note_date + 'T12:00:00');
+          const dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const icon = ICONS[n.category] || '📝';
+          notesHtml += '<div class="history-entry" style="display:flex;gap:0.75rem;align-items:flex-start">' +
+            '<span style="font-size:1.2rem;margin-top:0.1rem">' + icon + '</span>' +
+            '<div style="flex:1"><div class="history-date">' + n.category + ' · ' + dateStr + '</div>' +
+            '<div class="history-detail" style="margin-top:0.3rem;color:var(--text-mid)">' + n.note + '</div></div>' +
+            (n.category === 'Sonstiges' ? '<button class="btn-small btn-log" style="font-size:0.7rem;padding:0.2rem 0.5rem" onclick="deleteHorseNote(\'' + n.name + '\')">✕</button>' : '') +
+            '</div>';
+        });
+      }
+      notesHtml += '</div>';
+      container.innerHTML += notesHtml;
+    });
+  }
+
+  function showAddNoteForm() { document.getElementById('add-note-form').style.display = 'block'; }
+  function hideAddNoteForm() { document.getElementById('add-note-form').style.display = 'none'; document.getElementById('note-text').value = ''; }
+
+  function submitHorseNote() {
+    const category = document.getElementById('note-category').value;
+    const note = document.getElementById('note-text').value.trim();
+    if (!note) { showToast('Bitte Notiz eingeben', 'error'); return; }
+    fetch('/api/method/riding_school.riding_school.api.instructor.save_horse_note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ horse_name: currentHorseName, category: category, note: note })
+    }).then(r => r.json()).then(() => { showToast('Notiz gespeichert', 'success'); openHorseHistory(currentHorseName); });
+  }
+
+  function deleteHorseNote(noteName) {
+    if (!confirm('Notiz löschen?')) return;
+    fetch('/api/method/riding_school.riding_school.api.instructor.delete_horse_note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ note_name: noteName })
+    }).then(r => r.json()).then(() => { showToast('Notiz gelöscht', 'success'); openHorseHistory(currentHorseName); });
+  }
+
+  // ===== TOAST =====
+  function showToast(msg, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:' + (type === 'success' ? '#2D6A4F' : '#8B1A1A') + ';color:white;padding:0.75rem 1.5rem;border-radius:10px;font-family:Jost,sans-serif;font-size:0.9rem;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:300;transition:opacity 0.3s;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+  }
+
+  function logout() {
+    fetch('/api/method/logout', { method: 'POST', headers: { 'X-Frappe-CSRF-Token': getCsrf() } })
+      .then(() => window.location.href = '/buchung');
   }
 
   // ===== INIT =====

@@ -41,12 +41,13 @@ def get_instructor_slots(date):
         if booking:
             rider_name = frappe.db.get_value("RS Rider", booking.rider, "full_name")
 
-        # Teilnehmer laden
-        participants = frappe.get_all(
-            "RS Slot Participant",
-            filters={"parent": slot.name},
-            fields=["rider", "horse"]
-        )
+        # Teilnehmer laden inkl. Logbucheintrag direkt aus DB
+        participants = frappe.db.sql("""
+            SELECT rider, horse, logbook_entry
+            FROM `tabRS Slot Participant`
+            WHERE parent = %s
+            ORDER BY idx
+        """, slot.name, as_dict=True)
         rider_names = []
         rider_ids = []
         horse_names = []
@@ -68,6 +69,17 @@ def get_instructor_slots(date):
         icons = {'Einzelstunde': '🐴', 'Gruppenstunde': '👥', 'Event': '🎪'}
         slot_icon = icons.get(slot.slot_type, '🐴')
 
+        # Teilnehmer als Array mit Logbucheintrag
+        participants_list = []
+        for j, p in enumerate(participants):
+            participants_list.append({
+                "rider_id": p.rider,
+                "rider_name": rider_names[j] if j < len(rider_names) else None,
+                "horse_id": p.horse,
+                "horse_name": horse_names[j] if j < len(horse_names) else None,
+                "logbook_entry": p.logbook_entry or ""
+            })
+
         result.append({
             "name": slot.name,
             "start_time": str(slot.start_time),
@@ -82,7 +94,8 @@ def get_instructor_slots(date):
             "facility_name": frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None,
             "rider_name": ", ".join(rider_names) if rider_names else None,
             "rider_id": rider_ids[0] if rider_ids else None,
-            "logbook_entry": slot.logbook_entry or ""
+            "logbook_entry": slot.logbook_entry or "",
+            "participants": participants_list
         })
 
     # Korrekte Zeitsortiering (HH:MM:SS als String)
@@ -90,8 +103,8 @@ def get_instructor_slots(date):
 
 
 @frappe.whitelist()
-def save_logbook_entry(slot_name, entry):
-    """Speichert einen Logbuch-Eintrag für einen Slot"""
+def save_logbook_entry(slot_name, entry, rider_id=None):
+    """Speichert einen Logbuch-Eintrag für einen Slot oder Teilnehmer"""
     if frappe.session.user == "Guest":
         frappe.throw(_("Nicht eingeloggt"))
 
@@ -106,10 +119,22 @@ def save_logbook_entry(slot_name, entry):
     if slot.instructor != instructor:
         frappe.throw(_("Keine Berechtigung"))
 
-    slot.logbook_entry = entry
-    slot.save(ignore_permissions=True)
-    frappe.db.commit()
+    if rider_id and len(slot.participants) > 1:
+        # Eintrag pro Teilnehmer direkt in DB
+        for p in slot.participants:
+            if p.rider == rider_id:
+                frappe.db.sql("""
+                    UPDATE `tabRS Slot Participant` 
+                    SET logbook_entry = %s 
+                    WHERE name = %s
+                """, (entry, p.name))
+                break
+    else:
+        # Einzelstunde: Eintrag am Slot
+        slot.logbook_entry = entry
+        slot.save(ignore_permissions=True)
 
+    frappe.db.commit()
     return {"success": True}
 
 
