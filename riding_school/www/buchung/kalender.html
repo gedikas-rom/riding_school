@@ -1771,6 +1771,17 @@
       .then(() => window.location.href = '/buchung');
   }
 
+  // Event delegation für Teilnehmer-Links
+  document.addEventListener('click', function(e) {
+    const el = e.target.closest('.hist-link');
+    if (!el) return;
+    const type = el.dataset.type;
+    const id = el.dataset.id;
+    if (!id) return;
+    if (type === 'rider') openRiderHistory(id);
+    if (type === 'horse') openHorseHistory(id);
+  });
+
   // ===== INIT =====
   loadSlots();
   loadTimeCards();

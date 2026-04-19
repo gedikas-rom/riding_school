@@ -233,15 +233,17 @@ def get_horse_history(horse_name):
     week_start = today - timedelta(days=today.weekday())
 
     hours_today = frappe.db.sql("""
-        SELECT SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600)
-        FROM `tabRS Lesson Slot`
-        WHERE horse = %s AND slot_date = %s AND status != 'Cancelled'
+        SELECT SUM(TIME_TO_SEC(TIMEDIFF(s.end_time, s.start_time)) / 3600)
+        FROM `tabRS Lesson Slot` s
+        JOIN `tabRS Slot Participant` sp ON sp.parent = s.name
+        WHERE sp.horse = %s AND s.slot_date = %s AND s.status = 'Completed'
     """, (horse_name, today))[0][0] or 0
 
     hours_week = frappe.db.sql("""
-        SELECT SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600)
-        FROM `tabRS Lesson Slot`
-        WHERE horse = %s AND slot_date >= %s AND status != 'Cancelled'
+        SELECT SUM(TIME_TO_SEC(TIMEDIFF(s.end_time, s.start_time)) / 3600)
+        FROM `tabRS Lesson Slot` s
+        JOIN `tabRS Slot Participant` sp ON sp.parent = s.name
+        WHERE sp.horse = %s AND s.slot_date >= %s AND s.status = 'Completed'
     """, (horse_name, week_start))[0][0] or 0
 
     history = []
