@@ -329,3 +329,61 @@ def delete_horse_note(note_name):
     frappe.delete_doc("RS Horse Note", note_name, ignore_permissions=True)
     frappe.db.commit()
     return {"success": True}
+
+
+@frappe.whitelist()
+def get_instructor_log_list(instructor, date_from, date_to, rider=None):
+    """Gibt alle Slots eines Reitlehrers mit Logbucheinträgen zurück"""
+    slots = frappe.get_all(
+        "RS Lesson Slot",
+        filters={
+            "instructor": instructor,
+            "slot_date": ["between", [date_from, date_to]],
+            "status": ["in", ["Completed", "Booked", "Released"]]
+        },
+        fields=["name", "slot_date", "start_time", "end_time", "status", "facility", "logbook_entry"],
+        order_by="slot_date desc, start_time desc"
+    )
+
+    result = []
+    for slot in slots:
+        participants = frappe.db.sql("""
+            SELECT rider, horse, logbook_entry
+            FROM `tabRS Slot Participant`
+            WHERE parent = %s AND rider IS NOT NULL ORDER BY idx
+        """, slot.name, as_dict=True)
+
+        # Nur Slots mit Reitschülern anzeigen
+        if not participants:
+            continue
+
+        # Reitschüler-Filter
+        if rider:
+            participants = [p for p in participants if p.rider == rider]
+            if not participants:
+                continue
+
+        participants_list = []
+        for p in participants:
+            rider_name = frappe.db.get_value("RS Rider", p.rider, "full_name") if p.rider else None
+            horse_name = frappe.db.get_value("RS Horse", p.horse, "horse_name") if p.horse else None
+            participants_list.append({
+                "rider_id": p.rider,
+                "rider_name": rider_name,
+                "horse_id": p.horse,
+                "horse_name": horse_name,
+                "logbook_entry": p.logbook_entry or ""
+            })
+
+        result.append({
+            "name": slot.name,
+            "slot_date": str(slot.slot_date),
+            "start_time": str(slot.start_time),
+            "end_time": str(slot.end_time),
+            "status": slot.status,
+            "facility_name": frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None,
+            "logbook_entry": slot.logbook_entry or "",
+            "participants": participants_list
+        })
+
+    return result

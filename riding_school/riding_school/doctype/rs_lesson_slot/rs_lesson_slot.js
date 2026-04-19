@@ -172,3 +172,21 @@ function release_slot(frm) {
         }
     });
 }
+
+// Tagebuch Aktionen
+frappe.ui.form.on('RS Lesson Slot', {
+    refresh: function(frm) {
+        if (frm.is_new() || frm.doc.status !== 'Completed') return;
+
+        frm.add_custom_button(__('Tagebucheinträge'), function() {
+            frappe.set_route('List', 'RS Rider Log', {lesson_slot: frm.doc.name});
+        }, __('Tagebuch'));
+
+        frm.add_custom_button(__('Neuer Eintrag'), function() {
+            frappe.new_doc('RS Rider Log', {
+                lesson_slot: frm.doc.name,
+                log_date: frm.doc.slot_date
+            });
+        }, __('Tagebuch'));
+    }
+});

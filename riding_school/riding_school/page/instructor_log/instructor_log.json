@@ -1,0 +1,13 @@
+{
+  "doctype": "Page",
+  "module": "Riding School",
+  "name": "instructor-log",
+  "page_name": "instructor-log",
+  "title": "Reitlehrer Logbuch",
+  "standard": "Yes",
+  "roles": [
+    {"role": "Riding School Instructor"},
+    {"role": "Riding School Backoffice"},
+    {"role": "System Manager"}
+  ]
+}
