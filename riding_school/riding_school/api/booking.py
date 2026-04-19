@@ -398,7 +398,7 @@ def get_rider_diary():
             "rider_comment": log.rider_comment if log else ""
         })
 
-    return sorted(result, key=lambda x: (x["slot_date"], x["start_time"]))
+    return sorted(result, key=lambda x: (x["slot_date"], x["start_time"]), reverse=True)
 
 
 @frappe.whitelist()
