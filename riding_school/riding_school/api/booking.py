@@ -27,9 +27,10 @@ def get_available_slots(start, end):
         filters=filters,
         fields=[
             "name", "slot_date", "start_time", "end_time",
-            "instructor", "horse", "facility", "status",
-            "skill_level", "slot_type"
+            "instructor", "facility", "status",
+            "skill_level", "slot_type", "max_participants"
         ]
+        # slot_type wird direkt mitgeladen
     )
 
     # Meine Buchungen laden
@@ -51,20 +52,35 @@ def get_available_slots(start, end):
             if rider_idx < slot_idx:
                 continue
 
-        # Gewichtslimit prüfen
-        if rider and rider.weight_kg and slot.horse:
-            max_weight = frappe.db.get_value("RS Horse", slot.horse, "max_weight_kg")
-            if max_weight and rider.weight_kg > max_weight:
-                continue
+        # Gewichtslimit wird bei Buchung geprüft
 
         is_my_booking = slot.name in my_bookings
+
+        # Teilnehmer-Count für Gruppenslots
+        max_p = frappe.db.get_value("RS Lesson Slot", slot.name, "max_participants") or 1
+        current_p = frappe.db.count("RS Slot Participant", {"parent": slot.name})
+        is_full = current_p >= max_p
 
         # Nur Released anzeigen (außer eigene Buchungen und abgeschlossene)
         if slot.status in ["Booked", "Completed"] and not is_my_booking:
             continue
 
+        # Volle Gruppenslots ausblenden (außer eigene Buchungen)
+        if is_full and not is_my_booking and slot.status == "Released":
+            continue
+
         instructor_name = frappe.db.get_value("RS Instructor", slot.instructor, "full_name") if slot.instructor else None
-        horse_name = frappe.db.get_value("RS Horse", slot.horse, "horse_name") if slot.horse else None
+        # Pferde aus Teilnehmern holen
+        participant_horses = frappe.db.get_all(
+            "RS Slot Participant",
+            filters={"parent": slot.name},
+            fields=["horse"]
+        )
+        horse_names = [
+            frappe.db.get_value("RS Horse", p.horse, "horse_name")
+            for p in participant_horses if p.horse
+        ]
+        horse_name = ", ".join(filter(None, horse_names)) or None
         facility_name = frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None
 
         # Buchungsname für Stornierung
@@ -87,7 +103,11 @@ def get_available_slots(start, end):
             "facility_name": facility_name,
             "status": slot.status,
             "is_my_booking": is_my_booking,
-            "booking_name": booking_name
+            "booking_name": booking_name,
+            "max_participants": max_p,
+            "current_participants": current_p,
+            "is_group": max_p > 1,
+            "slot_type": slot.slot_type or "Einzelstunde"
         })
 
     return sorted(result, key=lambda x: (str(x["slot_date"]), str(x["start_time"])), reverse=True)
@@ -133,6 +153,12 @@ def book_slot(slot_name, billing_type="Single", time_card=None):
     if existing:
         return {"success": False, "error": "Du hast diesen Slot bereits gebucht"}
 
+    # Platz verfügbar?
+    max_p = slot.max_participants or 1
+    current_p = frappe.db.count("RS Slot Participant", {"parent": slot_name})
+    if current_p >= max_p:
+        return {"success": False, "error": "Dieser Slot ist bereits voll belegt"}
+
     # Zeitkarte prüfen
     if billing_type == "Time Card":
         if not time_card:
@@ -145,6 +171,54 @@ def book_slot(slot_name, billing_type="Single", time_card=None):
         if tc.rider != rider:
             return {"success": False, "error": "Diese Zeitkarte gehört nicht dir"}
 
+    # Passendes freies Pferd finden
+    rider_doc = frappe.get_doc("RS Rider", rider)
+    assigned_horse = None
+
+    # Bereits belegte Pferde in diesem Slot
+    taken_horses = frappe.db.get_all(
+        "RS Slot Participant",
+        filters={"parent": slot_name},
+        pluck="horse"
+    )
+
+    # Bevorzugte Pferde des Reitschülers prüfen
+    preferred = getattr(rider_doc, 'preferred_horses', None) or []
+    excluded_raw = getattr(rider_doc, 'excluded_horses', None) or []
+    excluded = [e.horse for e in excluded_raw if e and e.horse]
+
+    # Verfügbare Pferde suchen
+    available_horses = frappe.get_all(
+        "RS Horse",
+        filters={"status": "Active"},
+        fields=["name", "horse_name", "max_weight_kg"]
+    )
+
+    for horse in available_horses:
+        if horse.name in taken_horses:
+            continue
+        if horse.name in excluded:
+            continue
+        if horse.max_weight_kg and rider_doc.weight_kg and rider_doc.weight_kg > horse.max_weight_kg:
+            continue
+        assigned_horse = horse.name
+        break
+
+    # Reitschüler als Teilnehmer eintragen
+    slot.reload()
+    slot.append("participants", {
+        "rider": rider,
+        "horse": assigned_horse,
+        "confirmed": 1
+    })
+
+    # Slot-Status anpassen
+    new_count = current_p + 1
+    if new_count >= max_p:
+        slot.status = "Booked"
+
+    slot.save(ignore_permissions=True)
+
     # Buchung anlegen
     booking = frappe.get_doc({
         "doctype": "RS Booking",
@@ -156,12 +230,13 @@ def book_slot(slot_name, billing_type="Single", time_card=None):
     })
     booking.insert(ignore_permissions=True)
 
-    # Slot-Status auf Booked setzen
-    slot.status = "Booked"
-    slot.save(ignore_permissions=True)
-
     frappe.db.commit()
-    return {"success": True, "booking": booking.name}
+    return {
+        "success": True,
+        "booking": booking.name,
+        "horse": assigned_horse,
+        "message": f"Buchung erfolgreich!" + (f" Pferd: {frappe.db.get_value('RS Horse', assigned_horse, 'horse_name')}" if assigned_horse else " Kein Pferd verfügbar – Backoffice wird zuweisen.")
+    }
 
 
 @frappe.whitelist()
@@ -274,7 +349,17 @@ def get_rider_diary():
     for b in bookings:
         slot = frappe.get_doc("RS Lesson Slot", b.lesson_slot)
         instructor_name = frappe.db.get_value("RS Instructor", slot.instructor, "full_name") if slot.instructor else None
-        horse_name = frappe.db.get_value("RS Horse", slot.horse, "horse_name") if slot.horse else None
+        # Pferde aus Teilnehmern holen
+        participant_horses = frappe.db.get_all(
+            "RS Slot Participant",
+            filters={"parent": slot.name},
+            fields=["horse"]
+        )
+        horse_names = [
+            frappe.db.get_value("RS Horse", p.horse, "horse_name")
+            for p in participant_horses if p.horse
+        ]
+        horse_name = ", ".join(filter(None, horse_names)) or None
         facility_name = frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None
 
         # Rider Log laden

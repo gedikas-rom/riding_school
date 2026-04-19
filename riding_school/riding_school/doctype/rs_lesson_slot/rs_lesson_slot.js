@@ -23,7 +23,6 @@ frappe.ui.form.on('RS Lesson Slot', {
         if (frm.doc.status === 'Open') {
             frm.add_custom_button(__('Einplanen'), function() {
                 let missing = [];
-                if (!frm.doc.horse) missing.push('Pferd');
                 if (!frm.doc.facility) missing.push('Reitplatz');
 
                 let do_plan = function() {
@@ -51,7 +50,6 @@ frappe.ui.form.on('RS Lesson Slot', {
         if (frm.doc.status === 'Planned') {
             frm.add_custom_button(__('Freigeben'), function() {
                 let missing = [];
-                if (!frm.doc.horse) missing.push('Pferd');
                 if (!frm.doc.instructor) missing.push('Reitlehrer');
                 if (!frm.doc.facility) missing.push('Reitplatz');
 

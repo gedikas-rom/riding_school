@@ -41,16 +41,47 @@ def get_instructor_slots(date):
         if booking:
             rider_name = frappe.db.get_value("RS Rider", booking.rider, "full_name")
 
+        # Teilnehmer laden
+        participants = frappe.get_all(
+            "RS Slot Participant",
+            filters={"parent": slot.name},
+            fields=["rider", "horse"]
+        )
+        rider_names = []
+        rider_ids = []
+        horse_names = []
+        horse_ids = []
+        for p in participants:
+            if p.rider:
+                rn = frappe.db.get_value("RS Rider", p.rider, "full_name")
+                if rn:
+                    rider_names.append(rn)
+                    rider_ids.append(p.rider)
+            if p.horse:
+                hn = frappe.db.get_value("RS Horse", p.horse, "horse_name")
+                if hn:
+                    horse_names.append(hn)
+                    horse_ids.append(p.horse)
+
+        current_p = len(participants)
+        max_p = slot.max_participants or 1
+        icons = {'Einzelstunde': '🐴', 'Gruppenstunde': '👥', 'Event': '🎪'}
+        slot_icon = icons.get(slot.slot_type, '🐴')
+
         result.append({
             "name": slot.name,
             "start_time": str(slot.start_time),
             "end_time": str(slot.end_time),
             "status": slot.status,
-            "horse_name": frappe.db.get_value("RS Horse", slot.horse, "horse_name") if slot.horse else None,
+            "slot_type": slot.slot_type or "Einzelstunde",
+            "slot_icon": slot_icon,
+            "max_participants": max_p,
+            "current_participants": current_p,
+            "horse_name": ", ".join(horse_names) if horse_names else None,
+            "horse_id": horse_ids[0] if horse_ids else None,
             "facility_name": frappe.db.get_value("RS Facility", slot.facility, "facility_name") if slot.facility else None,
-            "rider_name": rider_name,
-            "rider_id": booking.rider if booking else None,
-            "horse_id": slot.horse,
+            "rider_name": ", ".join(rider_names) if rider_names else None,
+            "rider_id": rider_ids[0] if rider_ids else None,
             "logbook_entry": slot.logbook_entry or ""
         })
 

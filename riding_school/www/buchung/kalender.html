@@ -1129,12 +1129,17 @@
             const clickHandler = isCompleted
               ? 'onclick="openDiaryModalById(\'' + s.name + '\')"'
               : 'onclick="openCancelModal(\'' + s.booking_name + '\')"';
+            const icons2 = {'Einzelstunde': '🐴', 'Gruppenstunde': '👥', 'Event': '🎪'};
+            const icon2 = icons2[s.slot_type] || '🐴';
             html += '<span class="slot-pill ' + (isCompleted ? 'completed-own' : 'booked-own') + '" ' +
               clickHandler + ' title="' + (isCompleted ? 'Tagebucheintrag' : 'Stornieren') + '">' +
-              '✓ ' + s.start_time.slice(0,5) + '</span>';
+              '✓ ' + icon2 + ' ' + s.start_time.slice(0,5) + '</span>';
           } else {
-            html += '<span class="slot-pill released" onclick="openModal(\'' + s.name + '\')">' +
-              s.start_time.slice(0,5) + '</span>';
+            const slotIcons = {'Einzelstunde': '🐴', 'Gruppenstunde': '👥', 'Event': '🎪'};
+            const slotIcon = slotIcons[s.slot_type] || '🐴';
+            const spots = s.max_participants > 1 ? ' (' + (s.max_participants - s.current_participants) + ')' : '';
+            html += '<span class="slot-pill released" onclick="openModal(\'' + s.name + '\')">'
+              + slotIcon + ' ' + s.start_time.slice(0,5) + spots + '</span>';
           }
         });
         html += '</div>';
@@ -1222,7 +1227,7 @@
     .then(data => {
       closeModal();
       if (data.message && data.message.success) {
-        showToast('Buchung erfolgreich!', 'success');
+        showToast(data.message.message || 'Buchung erfolgreich!', 'success');
         loadSlots();
         loadTimeCards();
       } else {
@@ -1337,7 +1342,9 @@
 
       html += '<div class="slot-item">' +
         '<div class="slot-item-info">' +
-        '<div class="slot-item-time">' + s.start_time.slice(0,5) + ' – ' + s.end_time.slice(0,5) + ' Uhr</div>' +
+        '<div class="slot-item-time">' + (s.slot_icon || '🐴') + ' ' + s.start_time.slice(0,5) + ' – ' + s.end_time.slice(0,5) + ' Uhr' +
+        (s.max_participants > 1 ? ' <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.4rem">(' + s.current_participants + '/' + s.max_participants + ' Plätze belegt)</span>' : '') +
+        '</div>' +
         '<div class="slot-item-details">' +
         (s.rider_name ? '👤 <span style="cursor:pointer;color:var(--earth-warm);text-decoration:underline" onclick="openRiderHistory(\'' + s.rider_id + '\')">' + s.rider_name + '</span>' : 'Kein Reitschüler') +
         (s.horse_name ? ' · 🐴 <span style="cursor:pointer;color:var(--earth-warm);text-decoration:underline" onclick="openHorseHistory(\'' + s.horse_id + '\')">' + s.horse_name + '</span>' : '') +
@@ -1791,17 +1798,9 @@
   }
 
   // ===== INIT =====
-  fetch('/api/method/frappe.utils.generate_hash')
-    .then(() => {
-      loadSlots();
-      loadTimeCards();
-      loadDiary(); // Diary im Hintergrund laden für Kalender-Klicks
-    })
-    .catch(() => {
-      loadSlots();
-      loadTimeCards();
-      loadDiary();
-    });
+  loadSlots();
+  loadTimeCards();
+  loadDiary();
 </script>
 </body>
 </html>

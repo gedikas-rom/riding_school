@@ -45,7 +45,8 @@
       "fieldname": "slot_type",
       "fieldtype": "Select",
       "label": "Typ",
-      "options": "Einzel\nGruppe"
+      "options": "Einzelstunde\nGruppenstunde\nEvent",
+      "default": "Einzelstunde"
     },
     {
       "fieldname": "skill_level",
